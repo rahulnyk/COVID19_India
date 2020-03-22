@@ -102,7 +102,7 @@ if (animate) {
     height = 720,
     width = 1280
   )
-  anim_save(paste('IndiaCovid19', (Sys.Date()-1), "_1", ".gif", sep="" ), animation = last_animation())
+  anim_save(paste("output", ".gif", sep="" ), animation = last_animation())
 } else {
   print(p)
   ggsave(paste('IndiaCovid19', (Sys.Date()-1), "_1", ".jpg", sep="" ), 
