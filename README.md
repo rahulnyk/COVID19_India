@@ -12,3 +12,12 @@ Contributions welcome
 library(readr)
 d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
 ```
+### Script
+1. Clone/Fork/Download the repo
+2. Change the working directory path at the top of the script
+3. Change `animate` switch to `T` if you want animation output, `F` if you want the plot of yesterdays data.
+4. Run the script
+
+### Output Animation 
+
+![Output Animation](https://github.com/rahulnyk/COVID19_IndiaData/blob/master/IndiaCovid192020-03-21_1.gif)
