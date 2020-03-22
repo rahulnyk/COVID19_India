@@ -2,6 +2,8 @@
 
 The data is compiled manually using the daily updates about the outbreak on Ministry of Health and Family Welfare site: https://www.mohfw.gov.in/
 
+Will try to keep it as updated as possible. Please feel free point out any mistakes. 
+
 Contributions welcome 
 
 ### How to read the data in R
