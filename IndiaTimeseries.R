@@ -1,4 +1,4 @@
-setwd("~/work/covid19/COVID19India/COVID19_IndiaData")
+setwd("~/work/covid19/COVID19_IndiaData")
 library(tidyr)
 library(tidyverse)
 library(lubridate)
