@@ -96,7 +96,7 @@ if (animate) {
     transition_reveal(date)
   animate(
     p,
-    renderer=gifski_renderer( loop = T ), # render gif
+    renderer=gifski_renderer( loop = F ), # render gif
     # renderer=av_renderer(), # render video
     res=150,
     height = 720,
@@ -105,9 +105,9 @@ if (animate) {
   anim_save(paste("output", ".gif", sep="" ), animation = last_animation())
 } else {
   print(p)
-  ggsave(paste('IndiaCovid19', (Sys.Date()-1), "_1", ".jpg", sep="" ), 
-         width = 720,
-         height = 1280
+  ggsave("output.jpg", 
+         width = 6.4,
+         height = 3.6
          )
 }
 
