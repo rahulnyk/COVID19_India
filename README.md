@@ -20,4 +20,8 @@ d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/mast
 
 ### Output Animation 
 
-![Output Animation](https://github.com/rahulnyk/COVID19_IndiaData/blob/master/IndiaCovid192020-03-21_1.gif)
+![Output Animation](https://github.com/rahulnyk/COVID19_IndiaData/blob/master/output.gif)
+
+### Output Plot 
+
+![Output Animation](https://github.com/rahulnyk/COVID19_IndiaData/blob/master/output.jpg)

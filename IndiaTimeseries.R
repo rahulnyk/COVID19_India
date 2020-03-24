@@ -11,8 +11,8 @@ library(readr)
 
 
 options(
-  gganimate.nframes = 144, 
-  gganimate.fps=12
+  gganimate.nframes = 100, 
+  gganimate.fps=10
 )
 
 animate <- T
@@ -57,6 +57,11 @@ labels <- data %>%
   select(state_ut, yend)
 
 data <- left_join(data, labels, by = c("state_ut") )
+
+
+if (!animate) {
+  data <- data %>% filter(date == yesterday)
+}
 
 p <- ggplot(data = data, aes(x=days_since_0, y=cumulative, color = state_ut, size = cumulative) ) +
   geom_point() + 
