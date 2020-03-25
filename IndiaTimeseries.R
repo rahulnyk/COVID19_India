@@ -14,7 +14,7 @@ options(
   gganimate.fps=10
 )
 
-animate <- T
+animate <- F
 rebuild_dataframe <- F
 yesterday <- Sys.Date()
 
@@ -48,7 +48,7 @@ data <- rbind(data_state, data_total) %>%
   mutate( max_days = max(days_since_0) ) %>%
   ungroup() %>%
   ###
-  # filter(max_days > 5) %>%
+  filter(cumulative > 2) %>%
   mutate(label =  paste(cumulative, state_ut, sep=" | "))
 
 y_max <- max(data$cumulative)
@@ -93,9 +93,8 @@ p <- p +
   scale_color_viridis_d(option="inferno", begin = 0, end = 0.9) + 
   scale_fill_viridis_d(option="inferno", begin = 0, end = 0.9) + 
   xlab("Number of day since first report") + 
-  ylab("Number of cases (Cumulative)")
-
-
+  ylab("Number of cases (Cumulative)") # + 
+  # scale_y_continuous(trans = 'log2')
 
 if (animate) {
   p <- p + labs(
