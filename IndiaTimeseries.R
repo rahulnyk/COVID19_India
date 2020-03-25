@@ -9,24 +9,24 @@ library(animation)
 library(gifski)
 library(readr)
 
-
 options(
   gganimate.nframes = 100, 
   gganimate.fps=10
 )
 
-animate <- F
-
+animate <- T
+rebuild_dataframe <- F
 yesterday <- Sys.Date()
 
-library(readr)
-d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
-
-data <- d %>% 
+if (rebuild_dataframe) {
+  d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
+}
+data_state <- d %>% 
   rename(state_ut = "State/UnionTerritory", sn = "Sno", Date = "Date") %>%
   mutate(date = dmy(Date)) %>%
   ###
   group_by(state_ut, date) %>% 
+  ## Chosing the max number in case there are multiple entries for same date. 
   summarize(
     ConfirmedIndianNational = max(ConfirmedIndianNational),
     ConfirmedForeignNational = max(ConfirmedForeignNational),
@@ -35,7 +35,12 @@ data <- d %>%
     ) %>% 
   mutate(cumulative = ConfirmedIndianNational + ConfirmedForeignNational) %>% 
   filter(cumulative != 0) %>% 
-  select(state_ut, date, cumulative) %>% 
+  select(state_ut, date, cumulative) %>% ungroup()
+
+data_total <- data_state %>% group_by(date) %>% summarize(cumulative = sum(cumulative)) %>%
+  mutate(state_ut = "India Total") %>% ungroup()
+
+data <- rbind(data_state, data_total) %>% 
   mutate(day = as.integer(strftime(date, format = "%j")) ) %>%
   ###
   group_by(state_ut) %>% 
@@ -43,7 +48,7 @@ data <- d %>%
   mutate( max_days = max(days_since_0) ) %>%
   ungroup() %>%
   ###
-  filter(max_days > 5) %>%
+  # filter(max_days > 5) %>%
   mutate(label =  paste(cumulative, state_ut, sep=" | "))
 
 y_max <- max(data$cumulative)
