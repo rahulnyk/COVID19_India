@@ -15,9 +15,9 @@ options(
   gganimate.fps=10
 )
 
-animate <- T
+animate <- F
 
-yesterday <- Sys.Date()-1
+yesterday <- Sys.Date()
 
 library(readr)
 d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
