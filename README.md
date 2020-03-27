@@ -24,4 +24,8 @@ d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/mast
 
 ### Output Plot 
 
-![Output Animation](https://github.com/rahulnyk/COVID19_IndiaData/blob/master/output.jpg)
+![Total cases plot](https://github.com/rahulnyk/COVID19_IndiaData/blob/master/output.jpg)
+
+### Growth rate output plot
+
+![Growth rate plot](https://github.com/rahulnyk/COVID19_IndiaData/blob/master/gr_output.jpg)
