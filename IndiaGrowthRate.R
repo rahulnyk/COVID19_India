@@ -79,7 +79,7 @@ p <- ggarrange(
   nrow = 2
   )
 
-ggsave("rg_output.jpeg", p, device = "jpeg", dpi = 150, width = 4, height = 5)
+ggsave("gr_output.jpeg", p, device = "jpeg", dpi = 150, width = 4, height = 5)
 print(p)
 
 
