@@ -14,8 +14,8 @@ options(
   gganimate.fps=10
 )
 
-animate <- F
-rebuild_dataframe <- F
+animate <- T
+rebuild_dataframe <- T
 yesterday <- Sys.Date()
 
 if (rebuild_dataframe) {
