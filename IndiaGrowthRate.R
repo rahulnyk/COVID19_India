@@ -56,9 +56,9 @@ plot_theme <-   theme(
     panel.background = element_rect(fill = "white")
   ) 
 
-p1 <- ggplot(data = data_rate,  aes(x = date, y = rate2)) + plot_theme +
+p1 <- ggplot(data = data_rate,  aes(x = date, y = rate1)) + plot_theme +
   geom_smooth(alpha = 0.2) + 
-  geom_point(alpha = 0.3) + geom_line(linetype = '12', alpha = 0.6) +
+  geom_point(alpha = 0.3, size = 3) + geom_line(linetype = '12', alpha = 0.6) +
   geom_hline(yintercept = mean(data_total$rate2), linetype = '11', alpha = 0.5) +
   labs(y = "Growth rate in Percentage", title = "Groth rate by date") + 
   ylim(c(-10, 100)) + 
@@ -67,8 +67,9 @@ p1 <- ggplot(data = data_rate,  aes(x = date, y = rate2)) + plot_theme +
 
 p3 <- ggplot(data = data_abs, aes(x = date, y = total)) + plot_theme +
   geom_bar(aes( fill = type ), position = "stack", stat = "identity") + 
+  geom_label(aes(label = total), hjust = 1)+
   # scale_y_continuous(trans = 'log2') + 
-  labs(y = "Cumulative, Log", title = "Reported number of cases by date") + 
+  labs(y = "Cumulative", title = "Reported number of cases by date") + 
   scale_fill_viridis_d(option=pal, begin = 0.2, end = 0.9) + 
   scale_color_viridis_d(option=pal, begin = 0.2, end = 0.9) +
   theme(legend.position = c(0.2, 0.6), legend.title = element_blank()) 
