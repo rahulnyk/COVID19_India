@@ -39,13 +39,15 @@ data_total <- d %>%
   mutate(in_treatment = total - cured - deaths) %>%
   mutate( total_next = lead(total, default = 0), total_prev = lag(total, default = 0)) %>%
   mutate( rate1 = round((total - total_prev)*100/total), rate2 = round((total_next - total_prev)*100/(2*total)) ) %>%
-  filter( date > '2020-03-03') %>% select(-c("total")) 
+  filter( date > '2020-03-03') # %>% select(-c("total")) 
 
 data_rate <- data_total %>% select(date, rate1, rate2)
 
 data_abs <- data_total %>% select(date, cured, in_treatment, deaths) %>% 
   pivot_longer(-c(date), values_to = "total", names_to = "type")
 
+data_label <- data_total %>% select(date, total)
+  
 plot_theme <-   theme(
     axis.text=element_text(size=8, color = "darkgrey"), 
     axis.title=element_text(size=10),
@@ -56,7 +58,7 @@ plot_theme <-   theme(
     panel.background = element_rect(fill = "white")
   ) 
 
-p1 <- ggplot(data = data_rate,  aes(x = date, y = rate1)) + plot_theme +
+p1 <- ggplot(data = data_rate,  aes(x = date, y = rate2)) + plot_theme +
   geom_smooth(alpha = 0.2) + 
   geom_point(alpha = 0.3, size = 3) + geom_line(linetype = '12', alpha = 0.6) +
   geom_hline(yintercept = mean(data_total$rate2), linetype = '11', alpha = 0.5) +
@@ -67,12 +69,12 @@ p1 <- ggplot(data = data_rate,  aes(x = date, y = rate1)) + plot_theme +
 
 p3 <- ggplot(data = data_abs, aes(x = date, y = total)) + plot_theme +
   geom_bar(aes( fill = type ), position = "stack", stat = "identity") + 
-  geom_label(aes(label = total), hjust = 1)+
+  geom_text(data = data_label, aes(label = total), hjust = 1, vjust = -1, size=3)+
   # scale_y_continuous(trans = 'log2') + 
   labs(y = "Cumulative", title = "Reported number of cases by date") + 
   scale_fill_viridis_d(option=pal, begin = 0.2, end = 0.9) + 
   scale_color_viridis_d(option=pal, begin = 0.2, end = 0.9) +
-  theme(legend.position = c(0.2, 0.6), legend.title = element_blank()) 
+  theme(legend.position = c(0.2, 0.6), legend.title = element_blank()) + ylim(c(0, max(data_label$total)+200 ))
 
 p <- ggarrange(
   p1, p3,
