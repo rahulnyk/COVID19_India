@@ -25,6 +25,7 @@ if (rebuild_dataframe) {
 
 }
 data_total <- d %>% 
+  mutate(ConfirmedForeignNational = ifelse(is.na(ConfirmedForeignNational), 0, ConfirmedForeignNational)) %>%
   rename(state_ut = "State/UnionTerritory", sn = "Sno", Date = "Date") %>%
   mutate(date = dmy(Date)) %>%
   group_by(state_ut, date) %>% 
