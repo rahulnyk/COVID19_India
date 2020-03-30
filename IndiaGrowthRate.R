@@ -59,7 +59,7 @@ plot_theme <-   theme(
     panel.background = element_rect(fill = "white")
   ) 
 
-p1 <- ggplot(data = data_rate,  aes(x = date, y = rate2)) + plot_theme +
+p1 <- ggplot(data = data_rate,  aes(x = date, y = rate1)) + plot_theme +
   geom_smooth(alpha = 0.2) + 
   geom_point(alpha = 0.3, size = 3) + geom_line(linetype = '12', alpha = 0.6) +
   geom_hline(yintercept = mean(data_total$rate2), linetype = '11', alpha = 0.5) +
