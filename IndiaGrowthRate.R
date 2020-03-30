@@ -44,7 +44,7 @@ data_total <- d %>%
   mutate(in_treatment = total - cured - deaths) %>%
   mutate( total_next = lead(total, default = 0), total_prev = lag(total, default = 0)) %>%
   mutate( rate1 = round((total - total_prev)*100/total), rate2 = round((total_next - total_prev)*100/(2*total)) ) %>%
-  filter( date > '2020-03-03') %>% filter(date < Sys.Date())
+  filter( date > '2020-03-03') # %>% filter(date < Sys.Date())
 
 data_rate <- data_total %>% select(date, rate1, rate2)
 
