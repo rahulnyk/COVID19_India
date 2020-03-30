@@ -36,11 +36,15 @@ data_total <- d %>%
     cured = max(Cured), deaths = max(Deaths)
     ) %>% 
   mutate(total = ConfirmedIndianNational + ConfirmedForeignNational) %>% 
-  group_by(date) %>% summarise(total = sum(total), cured = sum(cured), deaths = sum(deaths)) %>%
+  group_by(date) %>% summarise(
+    total = sum(total),
+    cured = sum(cured),
+    deaths = sum(deaths)
+    ) %>%
   mutate(in_treatment = total - cured - deaths) %>%
   mutate( total_next = lead(total, default = 0), total_prev = lag(total, default = 0)) %>%
   mutate( rate1 = round((total - total_prev)*100/total), rate2 = round((total_next - total_prev)*100/(2*total)) ) %>%
-  filter( date > '2020-03-03') # %>% select(-c("total")) 
+  filter( date > '2020-03-03') %>% filter(date < Sys.Date())
 
 data_rate <- data_total %>% select(date, rate1, rate2)
 
@@ -70,7 +74,7 @@ p1 <- ggplot(data = data_rate,  aes(x = date, y = rate1)) + plot_theme +
 
 p3 <- ggplot(data = data_abs, aes(x = date, y = total)) + plot_theme +
   geom_bar(aes( fill = type ), position = "stack", stat = "identity") + 
-  geom_text(data = data_label, aes(label = total), hjust = 1, vjust = -1, size=3)+
+  geom_text(data = data_label, aes(label = total), hjust = 1, vjust = -1, size=3) +
   # scale_y_continuous(trans = 'log2') + 
   labs(y = "Cumulative", title = "Reported number of cases by date") + 
   scale_fill_viridis_d(option=pal, begin = 0.2, end = 0.9) + 
