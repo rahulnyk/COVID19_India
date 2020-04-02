@@ -9,7 +9,6 @@ library(animation)
 library(gifski)
 library(readr)
 library(ggpubr)
-library(janitor)
 
 options(
   gganimate.nframes = 40, 
@@ -17,67 +16,44 @@ options(
 )
 
 pal <- "magma"
-pal2 <- "cividis"
-rebuild_dataframe <- F
-yesterday <- Sys.Date() -1
-today <- Sys.Date()
+animate <- F
+rebuild_dataframe <- T
+yesterday <- Sys.Date()
 
 if (rebuild_dataframe) {
-  # d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
-  url <- 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSc_2y5N0I67wDU38DjDh35IZSIS30rQf7_NYZhtYYGU1jJYT6_kDx4YpF-qw0LSlGsBYP8pqM_a1Pd/pub?output=csv'
-  
-  d_official <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/IndiaOfficalData.csv")
-  
-  d <- read_csv(url) %>% clean_names() %>%
-    select(-c("source_1", "source_2", "source_3", "backup_notes", "notes", "estimated_onset_date")) %>%
-    filter(! is.na(date_announced) ) %>%
-    mutate(date = dmy(date_announced)) %>% 
-    select(date, detected_state, current_status) %>% 
-    rename(state_ut = "detected_state", status = "current_status" ) %>%
-    arrange(date)
-    
-  dt <- NULL
-  
-  for (di in as.list( unique(d$date) )) {
-    print(date)
-    dts <- d %>%
-      filter(date <= di) %>% group_by(state_ut, status) %>%
-      summarize(total = n() ) %>% mutate(date = di)
-    dt <- rbind(dt, dts)
-  }
-  
+  d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
+
 }
-
-data_total <- dt %>% group_by(date, status) %>% summarize(total = sum(total)) %>%
-  pivot_wider(names_from = status, values_from = total, values_fill = list(total = 0)) %>%
-  mutate(Total = Hospitalized + Recovered + Deceased + Migrated) %>% ungroup() %>%
-  mutate( total_next = lead(Total, default = 0), total_prev = lag(Total, default = 0)) %>%
-  mutate( date_next = lead(date), date_prev = lag(date) ) %>% 
-  mutate(date_current_prev = as.integer(date - date_prev) , date_next_prev = as.integer(date_next - date_prev) ) %>%
-  filter(date > ymd('2020-03-03')	) %>%
-  mutate( rate1 = round((Total - total_prev)*100/(date_current_prev*total_prev) ), rate2 = round((total_next - total_prev)*100/((date_next_prev)*Total)) ) %>%
-  ungroup()
-
-data_total_official <- d_official %>% mutate(date = mdy(date)) %>%
-  mutate( total_next = lead(Total, default = 0), total_prev = lag(Total, default = 0)) %>%
+data_total <- d %>% 
+  mutate(ConfirmedForeignNational = ifelse(is.na(ConfirmedForeignNational), 0, ConfirmedForeignNational)) %>%
+  rename(state_ut = "State/UnionTerritory", sn = "Sno", Date = "Date") %>%
+  mutate(date = dmy(Date)) %>%
+  group_by(state_ut, date) %>% 
+  ## Chosing the max number in case there are multiple entries for same date. 
+  summarize(
+    ConfirmedIndianNational = max(ConfirmedIndianNational),
+    ConfirmedForeignNational = max(ConfirmedForeignNational),
+    Recovered = max(Cured), Deceased = max(Deaths)
+    ) %>% 
+  mutate(total = ConfirmedIndianNational + ConfirmedForeignNational) %>% 
+  group_by(date) %>% summarise(
+    total = sum(total),
+    Recovered = sum(Recovered),
+    Deceased = sum(Deceased)
+    ) %>%
+  mutate(Hospitalized = total - Recovered - Deceased) %>%
+  mutate( total_next = lead(total, default = 0, order_by = date), total_prev = lag(total, default = 0, order_by = date)) %>%
   mutate( date_next = lead(date, order_by = date), date_prev = lag(date, order_by = date) ) %>% 
-  mutate(date_current_prev = difftime(date, date_prev, units = "days") , date_next_prev = difftime(date_next, date_prev, units = "days") ) %>%
-  mutate( rate1 = round((Total - total_prev)*100/(as.integer(date_current_prev)*total_prev) ), rate2 = round((total_next - total_prev)*100/(as.integer(date_next_prev)*Total)) ) %>%
-  ungroup() %>% filter(date > ymd('2020-03-03')	) 
+  mutate(date_current_prev = as.integer(date - date_prev) , date_next_prev = as.integer(date_next - date_prev) ) %>% 
+  mutate( rate1 = round((total - total_prev)*100/(date_current_prev*total_prev)), rate2 = round((total_next - total_prev)*100/((date_next_prev)*total) ) ) %>%
+  filter( date > ymd('2020-03-03')) # %>% filter(date < Sys.Date())
 
-data_rate <- data_total %>% select(date, rate1, rate2) %>% mutate(source = "Crowd")
-
-data_rate_official <- data_total_official %>% select(date, rate1, rate2) %>% mutate(source = "Official")
-
-data_rate <- rbind(data_rate, data_rate_official)
+data_rate <- data_total %>% select(date, rate1, rate2)
 
 data_abs <- data_total %>% select(date, Recovered, Hospitalized, Deceased) %>% 
-  pivot_longer(-c(date), values_to = "total", names_to = "status") %>% 
-  group_by(status) %>% mutate(max_cases = max(total)) %>% ungroup() %>%
-  mutate(label = paste(status, max_cases, sep=" | ") )
+  pivot_longer(-c(date), values_to = "total", names_to = "type")
 
-
-data_label <- data_total %>% select(date, Total) %>% rename(total = "Total")
+data_label <- data_total %>% select(date, total)
   
 plot_theme <-   theme(
     axis.text=element_text(size=8, color = "darkgrey"), 
@@ -89,41 +65,48 @@ plot_theme <-   theme(
     panel.background = element_rect(fill = "white")
   ) 
 
-p1 <- ggplot(data = data_rate,  aes(x = date, y = rate1, group = source, color = source, fill=source)) + plot_theme +
-  geom_smooth(alpha = 0.2) +
-  geom_point(alpha = 0.3, size = 3) + geom_line(linetype = '12', alpha = 0.6) 
-
-p1 <- p1 + labs(y = "Growth rate in Percentage")  + 
-  ylim(c(-10, 50)) + 
+p1 <- ggplot(data = data_rate,  aes(x = date, y = rate1)) + plot_theme +
+  geom_smooth(alpha = 0.2) + 
+  geom_point(alpha = 0.3, size = 3) + geom_line(linetype = '12', alpha = 0.6) +
+  geom_hline(yintercept = mean(data_total$rate2), linetype = '11', alpha = 0.5) +
+  labs(y = "Growth rate in Percentage") + # labs(title = "Groth rate by date") + 
+  ylim(c(-10, 70)) + 
   scale_fill_viridis_d(option=pal, begin = 0, end = 0.9) + 
   scale_color_viridis_d(option=pal, begin = 0, end = 0.9) +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()) +
-  geom_label( color = "darkgrey", fill="white",
+  theme() +
+  geom_label(
     x=dmy('04-03-2020'), 
-    y=40, alpha=0.5, hjust=0,
-    label= paste("Yesterdays Rate = ", round( tail(data_total$rate1, n=2)[1] ), "%", set="") 
-    ) +
-  scale_fill_viridis_d(option=pal2, begin = 0.1, end = 0.8) + 
-  scale_color_viridis_d(option=pal2, begin = 0.1, end = 0.8) 
+    y=35, alpha=0.5, hjust=0,
+    label= paste("Current Rate = ", round( tail(data_total$rate1, n=1) ), "%", set="") 
+    )
 
 p3 <- ggplot(data = data_abs, aes(x = date, y = total)) + plot_theme +
-  geom_bar(aes( fill = label ), position = "stack", stat = "identity") + 
+  geom_bar(aes( fill = type ), position = "stack", stat = "identity") + 
   geom_text(data = data_label, aes(label = total), hjust = -0.2, vjust = 0, size=4, angle=90) +
   # scale_y_continuous(trans = 'log2') + 
   labs(y = "Cumulative number of cases") + # labs(title = "Reported number of cases by date") + 
   scale_fill_viridis_d(option=pal, begin = 0.2, end = 0.9) + 
   scale_color_viridis_d(option=pal, begin = 0.2, end = 0.9) +
-  theme(legend.position = c(0.2, 0.6), legend.title = element_blank()) + ylim(c(0, max(data_label$total)+200 ))
+  theme(
+    legend.position = c(0.2, 0.6), 
+    legend.title = element_blank(),
+    plot.margin = margin(20, 0, 0, 0),
+    axis.title.x=element_blank(),
+    axis.text.x=element_blank(),
+    axis.ticks.x=element_blank()
+    ) + ylim(c(0, max(data_label$total)+200 ))
 
 p <- ggarrange(
-  p1, p3,
+  p3, p1,
   ncol = 1, 
   nrow = 2
   )
 
 ggsave("gr_output.jpeg", p, device = "jpeg", dpi = 150, width = 4, height = 5)
 print(p)
+
+
+
+
 
 

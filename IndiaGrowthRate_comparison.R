@@ -16,9 +16,8 @@ options(
   gganimate.fps=10
 )
 
-pal <- "magma"
-pal2 <- "cividis"
-rebuild_dataframe <- T
+pal <- "cividis"
+rebuild_dataframe <- F
 yesterday <- Sys.Date() -1
 today <- Sys.Date()
 
@@ -92,10 +91,9 @@ plot_theme <-   theme(
   ) 
 
 p1 <- ggplot(data = data_rate,  aes(x = date, y = rate1, group = source, color = source, fill=source)) + plot_theme +
-  geom_smooth(alpha = 0.2) +
-  geom_point(alpha = 0.4, size = 2) + geom_line(linetype = '12', alpha = 0.6) 
-
-p1 <- p1 + labs(y = "Growth rate in Percentage")  + 
+  geom_point(alpha = 0.6, size = 2, shape=1) + geom_line(linetype = 1, alpha = 0.3) + 
+  geom_smooth(alpha = 0.4) +
+  labs(y = "Growth rate in Percentage")  + 
   ylim(c(-10, 50)) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
