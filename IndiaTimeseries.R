@@ -16,7 +16,7 @@ options(
 
 animate <- T
 rebuild_dataframe <- T
-yesterday <- Sys.Date()
+yesterday <- Sys.Date() 
 
 if (rebuild_dataframe) {
   d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
@@ -24,6 +24,7 @@ if (rebuild_dataframe) {
 data_state <- d %>% 
   rename(state_ut = "State/UnionTerritory", sn = "Sno", Date = "Date") %>%
   mutate(date = dmy(Date)) %>%
+  mutate(ConfirmedForeignNational = ifelse(is.na(ConfirmedForeignNational), 0, ConfirmedForeignNational)) %>%
   ###
   group_by(state_ut, date) %>% 
   ## Chosing the max number in case there are multiple entries for same date. 
@@ -58,7 +59,8 @@ x_label <- x_max + 5
 labels <- data %>% 
   filter(date == yesterday) %>% 
   arrange( cumulative ) %>% 
-  mutate(yend = (y_max/n())*row_number()) %>%
+  # mutate(yend = (y_max/n())*row_number()) %>%
+  mutate( yend = ( 2^(  (log2(y_max)/(n()) )*row_number()  )) ) %>%
   select(state_ut, yend)
 
 data <- left_join(data, labels, by = c("state_ut") )
@@ -93,8 +95,8 @@ p <- p +
   scale_color_viridis_d(option="inferno", begin = 0, end = 0.9) + 
   scale_fill_viridis_d(option="inferno", begin = 0, end = 0.9) + 
   xlab("Number of day since first report") + 
-  ylab("Number of cases (Cumulative)") # + 
-  # scale_y_continuous(trans = 'log2')
+  ylab("Number of cases (Cumulative)")  + 
+  scale_y_continuous(trans = 'log2')
 
 if (animate) {
   p <- p + labs(
