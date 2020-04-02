@@ -18,7 +18,7 @@ options(
 
 pal <- "magma"
 pal2 <- "cividis"
-rebuild_dataframe <- F
+rebuild_dataframe <- T
 yesterday <- Sys.Date() -1
 today <- Sys.Date()
 
@@ -50,19 +50,19 @@ if (rebuild_dataframe) {
 
 data_total <- dt %>% group_by(date, status) %>% summarize(total = sum(total)) %>%
   pivot_wider(names_from = status, values_from = total, values_fill = list(total = 0)) %>%
-  mutate(Total = Hospitalized + Recovered + Deceased + Migrated) %>% ungroup() %>%
-  mutate( total_next = lead(Total, default = 0), total_prev = lag(Total, default = 0)) %>%
+  mutate(total = Hospitalized + Recovered + Deceased + Migrated) %>% ungroup() %>%
+  mutate( total_next = lead(total, default = 0), total_prev = lag(total, default = 0)) %>%
   mutate( date_next = lead(date), date_prev = lag(date) ) %>% 
   mutate(date_current_prev = as.integer(date - date_prev) , date_next_prev = as.integer(date_next - date_prev) ) %>%
   filter(date > ymd('2020-03-03')	) %>%
-  mutate( rate1 = round((Total - total_prev)*100/(date_current_prev*total_prev) ), rate2 = round((total_next - total_prev)*100/((date_next_prev)*Total)) ) %>%
+  mutate( rate1 = round((total - total_prev)*100/(date_current_prev*total_prev) ), rate2 = round((total_next - total_prev)*100/((date_next_prev)*total)) ) %>%
   ungroup()
 
-data_total_official <- d_official %>% mutate(date = mdy(date)) %>%
-  mutate( total_next = lead(Total, default = 0), total_prev = lag(Total, default = 0)) %>%
+data_total_official <- d_official %>% mutate(date = mdy(date)) %>% rename(total = "Total") %>%
+  mutate( total_next = lead(total, default = 0), total_prev = lag(total, default = 0)) %>%
   mutate( date_next = lead(date, order_by = date), date_prev = lag(date, order_by = date) ) %>% 
   mutate(date_current_prev = difftime(date, date_prev, units = "days") , date_next_prev = difftime(date_next, date_prev, units = "days") ) %>%
-  mutate( rate1 = round((Total - total_prev)*100/(as.integer(date_current_prev)*total_prev) ), rate2 = round((total_next - total_prev)*100/(as.integer(date_next_prev)*Total)) ) %>%
+  mutate( rate1 = round((total - total_prev)*100/(as.integer(date_current_prev)*total_prev) ), rate2 = round((total_next - total_prev)*100/(as.integer(date_next_prev)*total)) ) %>%
   ungroup() %>% filter(date > ymd('2020-03-03')	) 
 
 data_rate <- data_total %>% select(date, rate1, rate2) %>% mutate(source = "Crowd")
@@ -71,13 +71,15 @@ data_rate_official <- data_total_official %>% select(date, rate1, rate2) %>% mut
 
 data_rate <- rbind(data_rate, data_rate_official)
 
-data_abs <- data_total %>% select(date, Recovered, Hospitalized, Deceased) %>% 
-  pivot_longer(-c(date), values_to = "total", names_to = "status") %>% 
-  group_by(status) %>% mutate(max_cases = max(total)) %>% ungroup() %>%
-  mutate(label = paste(status, max_cases, sep=" | ") )
+data_abs <- data_total %>% mutate(source = "Crowd", total = total)  %>% select(date, source, total) 
+data_abs_official <- data_total_official %>% mutate(source = "Official", total = total) %>% select(date, source, total) 
+
+data_abs <- rbind(data_abs, data_abs_official) %>% group_by(source) %>%
+  mutate(max_cases = max(total)) %>% ungroup() %>%
+  mutate(label = paste(source, max_cases, sep=" | ") )
 
 
-data_label <- data_total %>% select(date, Total) %>% rename(total = "Total")
+data_label <- data_total %>% select(date, total) %>% rename(total = "total")
   
 plot_theme <-   theme(
     axis.text=element_text(size=8, color = "darkgrey"), 
@@ -104,17 +106,17 @@ p1 <- p1 + labs(y = "Growth rate in Percentage")  +
     x=dmy('04-03-2020'), 
     y=40, alpha=0.5, hjust=0,
     label= paste("Yesterdays Rate = ", round( tail(data_total$rate1, n=2)[1] ), "%", set="") 
-    ) +
-  scale_fill_viridis_d(option=pal2, begin = 0.1, end = 0.8) + 
-  scale_color_viridis_d(option=pal2, begin = 0.1, end = 0.8) 
+    ) #+
+  #scale_fill_viridis_d(option=pal2, begin = 0.1, end = 0.8) + 
+  #scale_color_viridis_d(option=pal2, begin = 0.1, end = 0.8) 
 
 p3 <- ggplot(data = data_abs, aes(x = date, y = total)) + plot_theme +
-  geom_bar(aes( fill = label ), position = "stack", stat = "identity") + 
+  geom_area(aes( fill = label), alpha = 0.4, position = "dodge", stat = "identity") + 
   geom_text(data = data_label, aes(label = total), hjust = -0.2, vjust = 0, size=4, angle=90) +
   # scale_y_continuous(trans = 'log2') + 
   labs(y = "Cumulative number of cases") + # labs(title = "Reported number of cases by date") + 
-  scale_fill_viridis_d(option=pal, begin = 0.2, end = 0.9) + 
-  scale_color_viridis_d(option=pal, begin = 0.2, end = 0.9) +
+  #scale_fill_viridis_d(option=pal2, begin = 0.2, end = 0.9) + 
+  #scale_color_viridis_d(option=pal2, begin = 0.2, end = 0.9) +
   theme(legend.position = c(0.2, 0.6), legend.title = element_blank()) + ylim(c(0, max(data_label$total)+200 ))
 
 p <- ggarrange(
