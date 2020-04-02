@@ -18,7 +18,7 @@ options(
 
 pal <- "magma"
 pal2 <- "cividis"
-rebuild_dataframe <- F
+rebuild_dataframe <- T
 yesterday <- Sys.Date() -1
 today <- Sys.Date()
 
