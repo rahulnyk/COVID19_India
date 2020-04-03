@@ -1,7 +1,6 @@
 ---
 title: "India against COVID19"
 author: "Rahul Nayak"
-date: "4/3/2020"
 output: html_document
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
@@ -66,14 +65,6 @@ knitr::opts_chunk$set(echo = TRUE)
     filter( Date > Sys.Date()-5 )
 ```
 
-```{r echo=F, results='asis', layout="l-body-outset"}
-  data_today <- data_abs %>% 
-    filter(Date == Sys.Date()) %>% 
-    pivot_wider(values_from = Cumulative, names_from = Source) %>%
-    select(-c(Date))
-  kable(data_today)
-```
-
 
 ```{r echo=FALSE, fig.cap="Total number of COVID19 cases in India by Date", message=FALSE, warning=FALSE}
   ggplot(data = data_abs,  aes(x = Date, y = Cumulative, fill=Status)) + theme_minimal() +
@@ -85,6 +76,15 @@ knitr::opts_chunk$set(echo = TRUE)
     theme(legend.position = "top") +
     scale_fill_viridis_d(begin = 0.1, end = 1) + scale_color_viridis_d(begin = 0.1, end=1)
 
+```
+
+
+```{r echo=F, results='asis', layout="l-body-outset"}
+  data_today <- data_abs %>% 
+    filter(Date == Sys.Date()) %>% 
+    pivot_wider(values_from = Cumulative, names_from = Source) %>%
+    select(-c(Date))
+  kable(data_today)
 ```
 
 ### India Daily growth rate 
