@@ -47,7 +47,9 @@ knitr::opts_chunk$set(echo = TRUE)
   d <- rbind(do, dc)
 ```
 
-### Total number of cases pan India
+## India Current Status {.tabset}
+
+### Total number of cases pan India 
 
 ```{r include = FALSE}
   
@@ -85,7 +87,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-### India Daily growth rate
+### India Daily growth rate 
 
 ```{r echo=FALSE, fig.cap="Daily Growth rate of COVID19 cases in India", message=FALSE, warning=FALSE}
   data <- d  %>% select(StateUt, Date, Total, Source) %>% 
