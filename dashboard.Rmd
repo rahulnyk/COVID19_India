@@ -1,5 +1,5 @@
 ---
-title: "COVID19_India"
+title: "India against COVID19"
 author: "Rahul Nayak"
 date: "4/3/2020"
 output: html_document
@@ -17,26 +17,99 @@ knit: (function(input_file, encoding) {
   })
 ---
 
+### Data Sources
+Crowd Sourced Data
+https://www.covid19india.org/
+
+Ministry of Health and Family Welfare Data hosted on this repository
+https://github.com/rahulnyk/covid19_india_data
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r setup libraries, include=FALSE}
+  library(tidyverse)
+  library(lubridate)
+  library(viridis)
+  library(readr)
+  library(janitor)
+  library(kableExtra)
+  source('./source_crowd_data.r')
+  source('./source_official_data.r')
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r calculate data, include = FALSE}
+  source('./source_crowd_data.r')
+  source('./source_official_data.r')
+  dc <- build_crowd_data()
+  do <- build_official_data()
+  d <- rbind(do, dc)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Total number of cases pan India
+
+```{r include = FALSE}
+  
+  data_total <- d %>% 
+    pivot_longer(-c(StateUt, Date, Source), values_to = "Cumulative", names_to = "Status") %>%
+    group_by(Date, Source, Status) %>% 
+    summarise(Cumulative = sum(Cumulative)) %>% 
+    filter( Date > dmy('03-03-2020')) %>%
+    ungroup() 
+    
+  data_abs <- data_total %>% filter(Status != 'Total')
+  
+  data_label <- data_total %>% filter(Status == 'Total') %>% 
+    filter( Date > Sys.Date()-5 )
+```
+
+```{r echo=F, results='asis', layout="l-body-outset"}
+  data_today <- data_abs %>% 
+    filter(Date == Sys.Date()) %>% 
+    pivot_wider(values_from = Cumulative, names_from = Source) %>%
+    select(-c(Date))
+  kable(data_today)
+```
+
+
+```{r echo=FALSE, fig.cap="Total number of COVID19 cases in India by Date", message=FALSE, warning=FALSE}
+  ggplot(data = data_abs,  aes(x = Date, y = Cumulative, fill=Status)) + theme_minimal() +
+    geom_bar(stat = 'identity') + facet_wrap(~Source, ncol = 1) + 
+    geom_text(
+      data = data_label, 
+      aes(label = Cumulative), show.legend = F,
+      angle = 90, color='white', vjust = 0.5, hjust = 1, nudge_y = -100) + 
+    theme(legend.position = "top") +
+    scale_fill_viridis_d(begin = 0.1, end = 1) + scale_color_viridis_d(begin = 0.1, end=1)
+
+```
+
+### India Daily growth rate
+
+```{r echo=FALSE, fig.cap="Daily Growth rate of COVID19 cases in India", message=FALSE, warning=FALSE}
+  data <- d  %>% select(StateUt, Date, Total, Source) %>% 
+    group_by(Date, Source) %>%
+    summarise(Total = sum(Total)) %>% group_by(Source) %>%
+    mutate( TotalPrev = lag(Total, default = 0, order_by = Date)) %>%
+    mutate(  DatePrev = lag(Date, order_by = Date) ) %>% 
+    mutate(DateCurPrev = as.integer(Date - DatePrev) ) %>%
+    filter( Date > ymd('2020-03-04')	) %>%
+    mutate( DailyRate = round((Total - TotalPrev)*100/(DateCurPrev*TotalPrev) ) ) %>%
+    ungroup()
+
+  ggplot(
+    data = data,  
+    aes(x = Date, y = DailyRate, group = Source, color = Source, fill=Source)
+    ) + 
+  theme_minimal() +
+  geom_point(alpha = 0.3, size = 2) + geom_line(linetype = 1, alpha = 0.2) + 
+  geom_smooth(alpha = 0.2, size=0.6) +
+  labs(y = "Growth rate in Percentage")  + 
+  ylim(c(-10, 50)) +
+  theme(legend.position = "top") +
+  scale_fill_viridis_d(end = 0.6) + scale_color_viridis_d(end=0.6)
+
+```
+
+
