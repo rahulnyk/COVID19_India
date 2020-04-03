@@ -11,6 +11,6 @@ build_official_data <- function () {
       Recovered = max(Cured), 
       Deceased = max(Deaths),
       Hospitalized = Total-Recovered-Deceased
-    ) %>% mutate(Source = "Official")
+    ) %>% mutate(Source = "Ministry of Health and Family Welfare")
   return(do)
 }

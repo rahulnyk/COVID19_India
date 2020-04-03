@@ -13,7 +13,7 @@ build_crowd_data <- function () {
     print(di)
     dts <- dc %>%
       filter(date <= di) %>% group_by(StateUt, Status) %>%
-      summarize(total = n() ) %>% mutate(Date = di, Source = 'Crowd')
+      summarize(total = n() ) %>% mutate(Date = di, Source = 'Crowd Source')
     dtcs <- rbind(dtcs, dts)
   }
   dtc <- dtcs %>% 
