@@ -7,8 +7,8 @@ source('./source_crowd_data.r')
 source('./source_official_data.r')
 
 pal <- "cividis"
-rebuild_crowdsource_dataframe <- T
-rebuild_official_dataframe <- T
+rebuild_crowdsource_dataframe <- F
+rebuild_official_dataframe <- F
 
 if (rebuild_crowdsource_dataframe) {
   dc <- build_crowd_data()
@@ -44,11 +44,11 @@ plot_theme <-  theme_minimal()
 # ) 
 
 p1 <- ggplot(data = data_abs,  aes(x = Date, y = Cumulative, fill=Status)) + theme_minimal() +
-  geom_bar(stat = 'identity') + facet_wrap(~Source, ncol = 1) + 
+  geom_area(stat = 'identity') + facet_wrap(~Source, ncol = 1) + 
   geom_text(
     data = data_label, 
     aes(label = Cumulative), show.legend = F,
-    angle = 90, color='white', vjust = 0.5, hjust = 1, nudge_y = -100) + 
+    angle = 0, color='darkgrey', vjust = 0.5, hjust = 1, nudge_y = 0, nudge_x = -0.5) + 
   theme(legend.position = "top") +
   scale_fill_viridis_d(begin = 0.1, end = 1) + scale_color_viridis_d(begin = 0.1, end=1)
 
