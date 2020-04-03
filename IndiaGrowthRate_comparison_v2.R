@@ -1,4 +1,3 @@
-setwd("~/work/covid19/COVID19_IndiaData")
 library(tidyr)
 library(tidyverse)
 library(lubridate)
@@ -11,8 +10,8 @@ source('./source_crowd_data.r')
 source('./source_official_data.r')
 
 pal <- "cividis"
-rebuild_crowdsource_dataframe <- F
-rebuild_official_dataframe <- F
+rebuild_crowdsource_dataframe <- T
+rebuild_official_dataframe <- T
 
 if (rebuild_crowdsource_dataframe) {
   dc <- build_crowd_data()

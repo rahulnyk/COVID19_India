@@ -1,4 +1,3 @@
-setwd("~/work/covid19/COVID19_IndiaData")
 library(tidyr)
 library(tidyverse)
 library(lubridate)
@@ -14,7 +13,7 @@ library(ggpubr)
 rebuild_dataframe <- T
 
 if (rebuild_dataframe) {
-  d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
+  d <- read_csv("https://raw.githubusercontent.com/rahulnyk/covid19_india_data/master/covid_19_india.csv")
 }
 
 data_total <- d %>% 

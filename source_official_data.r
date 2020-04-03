@@ -1,6 +1,6 @@
 
 build_official_data <- function () {
-  do <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv") %>%
+  do <- read_csv("https://raw.githubusercontent.com/rahulnyk/covid19_india_data/master/covid_19_india.csv") %>%
     mutate(ConfirmedForeignNational = ifelse(is.na(ConfirmedForeignNational), 0, ConfirmedForeignNational)) %>%
     rename(StateUt = "State/UnionTerritory") %>%
     mutate(Date = dmy(Date)) %>%

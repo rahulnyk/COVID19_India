@@ -1,4 +1,3 @@
-setwd("~/work/covid19/COVID19_IndiaData")
 library(tidyr)
 library(tidyverse)
 library(lubridate)
@@ -14,12 +13,12 @@ options(
   gganimate.fps=10
 )
 
-animate <- T
+animate <- F
 rebuild_dataframe <- T
-yesterday <- Sys.Date() 
+yesterday <- Sys.Date() -1 ## Change it to auto calculated last available date
 
 if (rebuild_dataframe) {
-  d <- read_csv("https://raw.githubusercontent.com/rahulnyk/COVID19_IndiaData/master/covid_19_india.csv")
+  d <- read_csv("https://raw.githubusercontent.com/rahulnyk/covid19_india_data/master/covid_19_india.csv")
 }
 data_state <- d %>% 
   rename(state_ut = "State/UnionTerritory", sn = "Sno", Date = "Date") %>%
