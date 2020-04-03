@@ -34,6 +34,7 @@ knitr::opts_chunk$set(echo = TRUE)
   library(readr)
   library(janitor)
   library(kableExtra)
+  # library(plotly)
   source('./source_crowd_data.r')
   source('./source_official_data.r')
 ```
@@ -44,6 +45,25 @@ knitr::opts_chunk$set(echo = TRUE)
   dc <- build_crowd_data()
   do <- build_official_data()
   d <- rbind(do, dc)
+  
+  ## Statewise Data
+  
+  data_panindia <- dc %>% group_by(Date) %>% summarize(Total = sum(Total)) %>%
+  mutate(StateUt = "India Total") %>% ungroup()
+
+  data_states <- dc %>% select(StateUt, Date, Total) %>% ungroup()
+  
+  data_statewise <- rbind(data_panindia, data_states) %>%
+    mutate(Day = as.integer(strftime(Date, format = "%j")) ) %>%
+    ###
+    group_by(StateUt) %>% 
+    mutate( DaysSince0 = Day - min(Day)  ) %>% 
+    mutate( MaxDays = max(DaysSince0) ) %>%
+    ungroup() %>%
+    ###
+    filter(Total > 2) %>%
+    mutate(label =  paste(Total, StateUt, sep=" | "))
+  
 ```
 
 ## India Current Status {.tabset}
@@ -114,4 +134,58 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
+### Statewise Split
 
+```{r include = FALSE}
+
+  # Calculating Data
+  y_max <- max(data_statewise$Total)
+  x_max <- max(data_statewise$DaysSince0)
+  x_label <- x_max + 5
+  yesterday <- Sys.Date()
+  
+  labels <- data_statewise %>% 
+    filter(Date == yesterday) %>% 
+    arrange( Total ) %>% 
+    # mutate(yend = (y_max/n())*row_number()) %>%
+    mutate( yend = ( 2^(  (log2(y_max)/(n()) )*row_number()  )) ) %>%
+    select(StateUt, yend)
+  
+  data_statewise <- left_join(data_statewise, labels, by = c("StateUt") )
+  
+  data_statewise_latest <- data_statewise %>% filter(Date == yesterday)
+```
+
+```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE}
+  ggplot( data = data_statewise_latest, 
+          aes(x=DaysSince0, y=Total, fill = StateUt, size = Total^(0.3) )
+          ) +
+  geom_point(shape = 21, color = 'lightgrey') + 
+  geom_line(size = 0.5, alpha=0.6)  +
+  geom_label(
+    aes(x=x_label, y = yend, label = label, fill=StateUt),
+    color='white', fontface = "bold",
+    hjust = 0, size=3) + 
+  geom_segment(
+    aes(xend = x_label, yend = yend, color = StateUt), 
+    linetype = "11", size=0.4, alpha=0.5) +
+  theme_minimal() +
+  theme(
+    axis.text=element_text(size=10, color = "darkgrey"),
+    axis.title=element_text(size=12)
+  ) +
+  theme( legend.position = 'off' ) +
+  theme(plot.title = element_text(size = 12, hjust = 0.5) ) +
+  theme(plot.margin = margin(15, 160, 15, 10)) +
+  coord_cartesian(clip = 'off')  +
+  scale_color_viridis_d(option="inferno", end = 0.9) + 
+  scale_fill_viridis_d(option="inferno", end = 0.9) + 
+  xlab("Number of day since first report") + 
+  ylab("Number of cases (Cumulative)")  + 
+  scale_y_continuous(trans = 'log2') + scale_radius(
+    range = c(1, 15),
+    trans = "identity",
+    guide = "legend"
+  )
+
+```
