@@ -21,7 +21,7 @@ fig_height: 6
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(fig.width=10, fig.height=6) 
+knitr::opts_chunk$set(fig.width=8, fig.height=5) 
 ```
 
 ```{r setup libraries, include=FALSE}
@@ -56,11 +56,12 @@ knitr::opts_chunk$set(fig.width=10, fig.height=6)
     group_by(StateUt) %>% 
     mutate( DaysSince0 = Day - min(Day)  ) %>% 
     mutate( MaxDays = max(DaysSince0) ) %>%
+    mutate( MaxCases = max(Total) ) %>%
     ungroup() %>%
     ###
-    filter(Total > 2) %>%
-    mutate(label =  paste(Total, StateUt, sep=" | "))
-
+    mutate(label =  paste(MaxCases, StateUt, sep=" | ")) %>%
+    filter(Date > dmy('01-03-2020'))
+  
   data_total <- d %>% 
     pivot_longer(-c(StateUt, Date, Source), values_to = "Cumulative", names_to = "Status") %>%
     group_by(Date, Source, Status) %>% 
@@ -90,7 +91,7 @@ https://github.com/rahulnyk/covid19_india_data
 ```
 
 
-## {.tabset}
+##  {.tabset .tabset-fade .tabset-pills}
 
 ### Pan India
 
@@ -144,56 +145,36 @@ https://github.com/rahulnyk/covid19_india_data
 
 ### Statewise Split
 
-```{r include = FALSE}
-
-  # Calculating Data
-  y_max <- max(data_statewise$Total)
-  x_max <- max(data_statewise$DaysSince0)
-  x_label <- x_max + 5
-  yesterday <- Sys.Date()
-  
-  labels <- data_statewise %>% 
-    filter(Date == yesterday) %>% 
-    arrange( Total ) %>% 
-    # mutate(yend = (y_max/n())*row_number()) %>%
-    mutate( yend = ( 2^(  (log2(y_max)/(n()) )*row_number()  )) ) %>%
-    select(StateUt, yend)
-  
-  data_statewise <- left_join(data_statewise, labels, by = c("StateUt") )
-  
-  data_statewise_latest <- data_statewise %>% filter(Date == yesterday)
-```
 
 ```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE}
-  ggplot( data = data_statewise_latest, 
-          aes(x=DaysSince0, y=Total, fill = StateUt, size = Total^(0.3) )
-          ) +
-  geom_point(shape = 21, color = 'lightgrey') + 
-  geom_line(size = 0.5, alpha=0.6)  +
-  geom_label(
-    aes(x=x_label, y = yend, label = label, fill=StateUt),
-    color='white', fontface = "bold",
-    hjust = 0, size=4) + 
-  geom_segment(
-    aes(xend = x_label, yend = yend, color = StateUt), 
-    linetype = "11", size=0.4, alpha=0.5) +
-  theme_minimal() +
-  theme(
-    axis.text=element_text(size=10, color = "darkgrey"),
-    axis.title=element_text(size=12)
-  ) +
-  theme( legend.position = 'off' ) +
-  theme(plot.title = element_text(size = 12, hjust = 0.5) ) +
-  theme(plot.margin = margin(15, 160, 15, 10)) +
-  coord_cartesian(clip = 'off')  +
-  scale_color_viridis_d(option="inferno", end = 0.9) + 
-  scale_fill_viridis_d(option="inferno", end = 0.9) + 
-  xlab("Number of day since first report") + 
-  ylab("Number of cases (Cumulative)")  + 
-  scale_y_continuous(trans = 'log2') + scale_radius(
-    range = c(1, 15),
-    trans = "identity",
-    guide = "legend"
-  )
+  
+  ggplot(
+      data = data_statewise, 
+      aes(x=Date, y=reorder(label, MaxCases), 
+          fill = StateUt, size = Total^(0.3))
+      ) +
+    geom_point(shape = 21, color = 'lightgrey') + 
+    geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
+    annotate(
+    "text", x = dmy('25-03-2020'), y = 34, 
+    size = 5, label = "Lockdown", hjust = 0, fontface =2 ) +
+    theme_minimal() + 
+    theme(
+      legend.position = 'off',
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.grid.major = element_blank(), 
+      panel.grid.minor = element_blank(),
+      axis.text.y = element_text(size=10,face="bold")
+    ) + 
+    scale_color_viridis_d(option="inferno", end = 0.9) + 
+    scale_fill_viridis_d(option="inferno", end = 0.9) + 
+    scale_y_discrete(position = "right") +
+    scale_radius(
+      range = c(1, 10),
+      trans = "identity",
+      guide = "legend"
+    ) + 
+    coord_cartesian(clip = 'off') 
 
 ```
