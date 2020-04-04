@@ -112,6 +112,10 @@ https://github.com/rahulnyk/covid19_india_data
     data = data,  
     aes(x = Date, y = DailyRate, group = Source, color = Source, fill=Source)
     ) + 
+  geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
+  annotate(
+  "text", x = dmy('25-03-2020'), y = 34, 
+  size = 5, label = "Lockdown", hjust = 0, fontface = 1 ) +
   theme_minimal() +
   geom_point(alpha = 0.3, size = 2) + geom_line(linetype = 1, alpha = 0.3) + 
   geom_smooth(alpha = 0.05, size=0.6) +
@@ -138,6 +142,10 @@ https://github.com/rahulnyk/covid19_india_data
       data = data_label, 
       aes(label = Cumulative), show.legend = F,
       angle = 0, color='darkgrey', vjust = 0.5, hjust = 1, nudge_y = 0, nudge_x = -0.5) + 
+    geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
+    annotate(
+    "text", x = dmy('25-03-2020'), y = 2000, 
+    size = 5, label = "Lockdown", hjust = 0, fontface =1 ) +
     theme(legend.position = c(0.2, 0.8)) +
     scale_fill_viridis_d(begin = 0.1, end = 1) + scale_color_viridis_d(begin = 0.1, end=1)
 
