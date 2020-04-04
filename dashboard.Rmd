@@ -94,7 +94,19 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
 
 ```
 
-## Current Status
+<!-- ## Current Status -->
+
+
+```{r echo=F, results='asis', layout="l-body-outset"}
+
+  data_today <- data_split_status %>%
+    filter(Date == Sys.Date()) %>%
+    pivot_wider(values_from = Cumulative, names_from = Source) %>%
+    select(-c(Date)) 
+  kable(data_today) %>% kable_styling(
+    bootstrap_options = c("striped", "hover"), full_width = F, position = 'float_right')
+  
+```
 
 **Crowd Sourced Data: ** https://www.covid19india.org/
 
@@ -104,16 +116,6 @@ https://github.com/rahulnyk/covid19_india_data
 **World Data: ** Repository hosted by Johns Hopkins CSSE
 https://github.com/CSSEGISandData/COVID-19
 
-```{r echo=F, results='asis', layout="l-body-outset"}
-
-  data_today <- data_split_status %>%
-    filter(Date == Sys.Date()) %>%
-    pivot_wider(values_from = Cumulative, names_from = Source) %>%
-    select(-c(Date)) 
-  kable(data_today) %>% kable_styling(
-    bootstrap_options = c("striped", "hover"), full_width = F)
-  
-```
 
 
 ##  {.tabset .tabset-fade .tabset-pills}
@@ -215,7 +217,7 @@ https://github.com/CSSEGISandData/COVID-19
 
 ### World
 
-#### Growth rate
+#### Global Growth rate
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.height = 4, fig.width = 8}
   pal <- "viridis"
@@ -241,7 +243,7 @@ https://github.com/CSSEGISandData/COVID-19
 
 ```
 
-#### Cumulative cases
+#### Global Cumulative cases
 
 ``` {r echo=FALSE,  message=FALSE, warning=FALSE, fig.height = 4, fig.width = 8}
   ggplot(
