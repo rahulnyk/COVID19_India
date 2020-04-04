@@ -34,11 +34,11 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
   # library(plotly)
   source('./source_crowd_data.r')
   source('./source_official_data.r')
+  source('./source_world_data.R')
 ```
 
 ```{r calculate data, include = FALSE}
-  source('./source_crowd_data.r')
-  source('./source_official_data.r')
+
   dc <- build_crowd_data()
   do <- build_official_data()
   d <- rbind(do, dc)
@@ -70,6 +70,28 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
     ungroup() 
     
   data_split_status <- data_total %>% filter(Status != 'Total')   
+  
+  ## World Data
+  from <- dmy('1-02-20')
+
+  d_w <- source_world_data()
+  
+  data_long_w <- d_w %>% select(-c(Lat, Long)) %>% filter(Date > from) %>%
+    pivot_longer(-c(StateUt, Country,  Date), values_to = 'Total', names_to = 'Status')
+  
+  data_total_w <- data_long_w %>%
+    group_by(Date, Status) %>% 
+    summarize( Total = sum(Total) )  %>% ungroup() 
+  
+  data_rate_w <- data_total_w %>% 
+    group_by(Status) %>%
+    mutate(TotalPrev = lag(Total, default = 0, order_by = Date )) %>% 
+    mutate(DatePrev = lag(Date, order_by = Date )) %>%
+    filter(!is.na(DatePrev)) %>% mutate(DelDay = as.integer(Date-DatePrev)) %>%
+    mutate( Rate1 = (Total - TotalPrev)*100/(DelDay*Total) ) %>%
+    ungroup() %>%
+    filter(!(Status %in% c('Hospitalized', 'Deaths')))
+
 ```
 
 ## Current Status
@@ -78,6 +100,9 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
 
 **Official Data: ** Ministry of Health and Family Welfare Data hosted on this repository
 https://github.com/rahulnyk/covid19_india_data
+
+**World Data: ** Repository hosted by Johns Hopkins CSSE
+https://github.com/CSSEGISandData/COVID-19
 
 ```{r echo=F, results='asis', layout="l-body-outset"}
 
@@ -141,7 +166,7 @@ https://github.com/rahulnyk/covid19_india_data
     geom_text(
       data = data_label, 
       aes(label = Cumulative), show.legend = F,
-      angle = 0, color='darkgrey', vjust = 0.5, hjust = 1, nudge_y = 0, nudge_x = -0.5) + 
+      angle = 0, vjust = 0.5, hjust = 1, nudge_y = 0, nudge_x = -0.5) + 
     geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
     annotate(
     "text", x = dmy('25-03-2020'), y = 2000, 
@@ -153,8 +178,9 @@ https://github.com/rahulnyk/covid19_india_data
 
 ### Statewise Split
 
+#### Statewise Split of cumulative number of cases as per the crowd sourced data
 
-```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE}
+```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE, fig.height = 8, fig.width = 8}
   
   ggplot(
       data = data_statewise, 
@@ -185,4 +211,47 @@ https://github.com/rahulnyk/covid19_india_data
     ) + 
     coord_cartesian(clip = 'off') 
 
+```
+
+### World
+
+#### Growth rate
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.height = 4, fig.width = 8}
+  pal <- "viridis"
+
+  plot_theme <-theme_minimal() + theme(
+    axis.text=element_text(size=8, color = "darkgrey"), 
+    axis.title=element_text(size=10),
+    axis.title.x = element_blank(),
+    # panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    plot.title = element_text(size = 12, hjust = 0),
+    legend.title = element_blank(), 
+    legend.position = c(0.2, 0.8)
+  )
+  ggplot(data = data_rate_w,  aes(x = Date, y = Rate1, color = Status, fill = Status)) + 
+    geom_smooth(aes(group = Status), alpha = 0.2, size = 0.6, linetype=1) + 
+    geom_point(alpha = 0.2, size=2) + geom_line(alpha = 0.4) +
+    labs(y = "Growth rate in Percentage") + # labs(title = "Groth rate by date") + 
+    scale_fill_viridis_d(option=pal, end = 0.6) + 
+    scale_color_viridis_d(option=pal, end = 0.6) + 
+    ylim(c(-10, 50)) +
+    plot_theme 
+
+```
+
+#### Cumulative cases
+
+``` {r echo=FALSE,  message=FALSE, warning=FALSE, fig.height = 4, fig.width = 8}
+  ggplot(
+      data = data_total_w %>% filter(!(Status %in% c('Total'))), 
+      aes(x = Date, y = Total/1000, fill = Status)
+      ) + 
+    geom_area(position = "stack", stat = "identity") +
+    # scale_y_continuous(trans = 'log2') +
+    labs(y = "Number of cases (thousands)") + # labs(title = "Reported number of cases by date") + 
+    scale_fill_viridis_d(option=pal, begin = 0, end = 0.9) + 
+    scale_color_viridis_d(option=pal, begin = 0, end = 0.9) +
+    plot_theme
 ```
