@@ -21,7 +21,7 @@ if (F) {
 
 
 
-p <- ggplot(data = dc_age_i, aes(x = AgeBracket, fill=Status)) + theme_minimal() +
+p <- ggplot(data = dc_age_i, aes(x = AgeBracket, fill=Status)) +
   geom_histogram(stat = "bin", position = "stack", bins = 40, color = 'white') +
   scale_fill_viridis_d()
 
