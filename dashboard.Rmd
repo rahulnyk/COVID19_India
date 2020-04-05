@@ -283,7 +283,7 @@ Data available for **`r nrow(dc_age_i)`** cases
 
   ggplot(data = dc_age_i, aes(x = AgeBracket, fill=Status)) +
     geom_histogram(stat = "bin", position = "stack", bins = 40, color = 'white') +
-    scale_fill_viridis_d(option = 'magma') + 
+    scale_fill_viridis_d(option = 'magma', end = 0.9) + 
     theme_minimal() + 
     theme(
       axis.text=element_text(size=8, color = "darkgrey"), 
