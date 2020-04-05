@@ -135,7 +135,7 @@ Last update at **`r Sys.time()`**
     mutate( TotalPrev = lag(Total, default = 0, order_by = Date)) %>%
     mutate(  DatePrev = lag(Date, order_by = Date) ) %>% 
     mutate(DateCurPrev = as.integer(Date - DatePrev) ) %>%
-    filter( Date > ymd('2020-03-04')	) %>%
+    filter( Date > ymd('2020-03-03')	) %>%
     mutate( DailyRate = round((Total - TotalPrev)*100/(DateCurPrev*TotalPrev) ) ) %>%
     ungroup()
 
