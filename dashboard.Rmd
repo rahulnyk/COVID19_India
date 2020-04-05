@@ -13,8 +13,6 @@ knit: (function(input_file, encoding) {
       )
     )
   })
-fig_width: 8
-fig_height: 6
 ---
 
 
@@ -39,47 +37,51 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
 
 ```{r calculate data, include = FALSE}
 
-  dc <- build_crowd_data()
-  do <- build_official_data()
-  d <- rbind(do, dc)
   
+  dc <- build_crowd_data()
+  dc_i <- dc$dc_i
+  dc_raw_i <- dc$dc_raw_i  
+  dc_age_i <- dc_raw_i %>% 
+    mutate(AgeBracket = as.numeric(AgeBracket)) %>% 
+    filter(!is.na(AgeBracket)) %>% 
+    ungroup()
+  
+  do_i <- build_official_data()
+  d_i_wide <- rbind(do_i, dc_i)
+  d_i_long <- d_i_wide %>% pivot_longer(
+    -c(StateUt, Date, Source), 
+    values_to = 'Cumulative', 
+    names_to = 'Status')
   ## Statewise Data
   
-  data_panindia <- dc %>% group_by(Date) %>% summarize(Total = sum(Total)) %>%
-  mutate(StateUt = "India Total") %>% ungroup()
+  data_panindia_total<- d_i_wide %>% 
+    group_by(Date, Source) %>% 
+    summarize(Total = sum(Total)) %>%
+    mutate(StateUt = "India Total") %>% 
+    ungroup()
 
-  data_states <- dc %>% select(StateUt, Date, Total) %>% ungroup()
+  data_states_total <- d_i_wide %>% 
+    select(StateUt, Source, Date, Total) %>% 
+    ungroup()
   
-  data_statewise <- rbind(data_panindia, data_states) %>%
-    mutate(Day = as.integer(strftime(Date, format = "%j")) ) %>%
-    ###
-    group_by(StateUt) %>% 
-    mutate( DaysSince0 = Day - min(Day)  ) %>% 
-    mutate( MaxDays = max(DaysSince0) ) %>%
-    mutate( MaxCases = max(Total) ) %>%
-    ungroup() %>%
-    ###
-    mutate(label =  paste(MaxCases, StateUt, sep=" | ")) %>%
-    filter(Date > dmy('01-03-2020'))
+  data_i_total <- rbind(data_panindia_total, data_states_total)
   
-  data_total <- d %>% 
-    pivot_longer(-c(StateUt, Date, Source), values_to = "Cumulative", names_to = "Status") %>%
+  data_i_aggregated_long <- d_i_long %>%
     group_by(Date, Source, Status) %>% 
     summarise(Cumulative = sum(Cumulative)) %>% 
     filter( Date > dmy('03-03-2020')) %>%
     ungroup() 
     
-  data_split_status <- data_total %>% filter(Status != 'Total')   
   
   ## World Data
   from <- dmy('1-02-20')
 
-  d_w <- source_world_data()
+  d_w_wide <- source_world_data()
   
-  data_long_w <- d_w %>% select(-c(Lat, Long)) %>% filter(Date > from) %>%
+  data_w_long <- d_w_wide %>% select(-c(Lat, Long)) %>% filter(Date > from) %>%
     pivot_longer(-c(StateUt, Country,  Date), values_to = 'Total', names_to = 'Status')
   
-  data_total_w <- data_long_w %>%
+  data_total_w <- data_w_long %>%
     group_by(Date, Status) %>% 
     summarize( Total = sum(Total) )  %>% ungroup() 
   
@@ -99,8 +101,8 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
 
 ```{r echo=F, results='asis', layout="l-body-outset"}
 
-  data_today <- data_split_status %>%
-    filter(Date == Sys.Date()) %>%
+  data_today <- data_i_aggregated_long %>%
+    filter(Date == max(Date)) %>%
     pivot_wider(values_from = Cumulative, names_from = Source) %>%
     select(-c(Date)) 
   kable(data_today) %>% kable_styling(
@@ -125,7 +127,8 @@ https://github.com/CSSEGISandData/COVID-19
 ####  Daily growth rate 
 
 ```{r echo=FALSE, fig.cap="Daily Growth rate of COVID19 cases in India", message=FALSE, warning=FALSE}
-  data <- d  %>% select(StateUt, Date, Total, Source) %>% 
+
+  data_i_rate <- d_i_wide  %>% select(StateUt, Date, Total, Source) %>% 
     group_by(Date, Source) %>%
     summarise(Total = sum(Total)) %>% group_by(Source) %>%
     mutate( TotalPrev = lag(Total, default = 0, order_by = Date)) %>%
@@ -136,7 +139,7 @@ https://github.com/CSSEGISandData/COVID-19
     ungroup()
 
   ggplot(
-    data = data,  
+    data = data_i_rate,  
     aes(x = Date, y = DailyRate, group = Source, color = Source, fill=Source)
     ) + 
   geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
@@ -156,14 +159,21 @@ https://github.com/CSSEGISandData/COVID-19
 #### Cumulative
 
 ```{r include = FALSE}
-  data_label <- data_total %>% filter(Status == 'Total') %>% 
+  data_label <- data_i_aggregated_long %>% filter(Status == 'Total') %>% 
     filter( Date > Sys.Date()-5 )
+  data_split_status <- data_i_aggregated_long %>% filter(Status != 'Total') 
 ```
 
 
 ```{r echo=FALSE, fig.cap="Total number of COVID19 cases in India by Date", message=FALSE, warning=FALSE}
   
-  ggplot(data = data_split_status,  aes(x = Date, y = Cumulative, fill=Status)) + theme_minimal() +
+   
+
+  ggplot(
+      data = data_split_status,  
+      aes(x = Date, y = Cumulative, fill=Status)
+    ) +      
+    theme_minimal() +
     geom_area(stat = 'identity') + facet_wrap(~Source, ncol = 1) + 
     geom_text(
       data = data_label, 
@@ -178,18 +188,36 @@ https://github.com/CSSEGISandData/COVID-19
 
 ```
 
-### Statewise Split
+### Statewise 
 
 #### Statewise Split of cumulative number of cases as per the crowd sourced data
 
+```{r include = F }
+
+  data_statewise <- data_i_total %>% group_by(Source) %>%
+    mutate(Day = as.integer(strftime(Date, format = "%j")) ) %>%
+    ungroup() %>%
+    ###
+    group_by(StateUt, Source) %>% 
+    mutate( DaysSince0 = Day - min(Day)  ) %>% 
+    mutate( MaxDays = max(DaysSince0) ) %>%
+    mutate( MaxCases = max(Total) ) %>%
+    ungroup() %>%
+    ###
+    mutate(label =  paste(MaxCases, StateUt, sep=" | ")) %>%
+    filter(Date > dmy('01-03-2020'))
+
+```
+
+
 ```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE, fig.height = 8, fig.width = 8}
-  
+
   ggplot(
-      data = data_statewise, 
+      data = data_statewise %>% filter(Source == 'Crowd Source'), 
       aes(x=Date, y=reorder(label, MaxCases), 
           fill = StateUt, size = Total^(0.3))
       ) +
-    geom_point(shape = 21, color = 'lightgrey') + 
+    geom_point(shape = 21, color = 'white') + 
     geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
     annotate(
     "text", x = dmy('25-03-2020'), y = 34, 
@@ -207,11 +235,34 @@ https://github.com/CSSEGISandData/COVID-19
     scale_fill_viridis_d(option="inferno", end = 0.9) + 
     scale_y_discrete(position = "right") +
     scale_radius(
-      range = c(1, 10),
+      range = c(1, 15),
       trans = "identity",
       guide = "legend"
     ) + 
     coord_cartesian(clip = 'off') 
+
+```
+
+### Agewise 
+
+#### Agewise split of cases in India
+
+Data available for **`r nrow(dc_age_i)`** cases
+
+```{r echo=FALSE,  message=FALSE, warning=FALSE, fig.height = 3, fig.width = 8}
+
+  ggplot(data = dc_age_i, aes(x = AgeBracket, fill=Status)) +
+    geom_histogram(stat = "bin", position = "stack", bins = 40, color = 'white') +
+    scale_fill_viridis_d() + 
+    theme_minimal() + 
+    theme(
+      axis.text=element_text(size=8, color = "darkgrey"), 
+      axis.title=element_text(size=10),
+      panel.grid.major = element_blank(),
+      plot.title = element_text(size = 12, hjust = 0),
+      legend.title = element_blank(), 
+      legend.position = c(0.8, 0.8)
+    )
 
 ```
 
@@ -222,7 +273,7 @@ https://github.com/CSSEGISandData/COVID-19
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.height = 4, fig.width = 8}
   pal <- "viridis"
 
-  plot_theme <-theme_minimal() + theme(
+  plot_theme <- theme_minimal() + theme(
     axis.text=element_text(size=8, color = "darkgrey"), 
     axis.title=element_text(size=10),
     axis.title.x = element_blank(),

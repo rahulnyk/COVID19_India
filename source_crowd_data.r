@@ -4,20 +4,26 @@ build_crowd_data <- function () {
   dc <- read_csv(url) %>% clean_names() %>%
     select(-c("source_1", "source_2", "source_3", "backup_notes", "notes", "estimated_onset_date")) %>%
     filter(! is.na(date_announced) ) %>%
-    mutate(date = dmy(date_announced)) %>% 
-    select(date, detected_state, current_status) %>% 
-    rename(StateUt = "detected_state", Status = "current_status" ) %>%
-    arrange(date)
+    mutate(Date = dmy(date_announced)) %>%
+    select(Date, detected_state, detected_city, age_bracket, current_status) %>%
+    rename(
+      StateUt = "detected_state", 
+      City = "detected_city",
+      Status = "current_status", 
+      AgeBracket = "age_bracket"
+      ) %>%
+    arrange(Date)
   dtcs <- NULL
-  for (di in as.list( unique(dc$date) )) {
+  for (di in as.list( unique(dc$Date) )) {
     print(di)
     dts <- dc %>%
-      filter(date <= di) %>% group_by(StateUt, Status) %>%
+      filter(Date <= di) %>% group_by(StateUt, Status) %>%
       summarize(total = n() ) %>% mutate(Date = di, Source = 'Crowd Source')
     dtcs <- rbind(dtcs, dts)
   }
   dtc <- dtcs %>% 
     pivot_wider(names_from = Status, values_from = total, values_fill = list(total = 0)) %>%
     mutate(Total = Recovered + Hospitalized + Deceased + Migrated) %>% select(-c(Migrated))
-  return(dtc)
+  cs_data_list <- list(dc_i = dtc, dc_raw_i = dc)
+  return(cs_data_list)
 }
