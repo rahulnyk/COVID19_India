@@ -4,6 +4,7 @@ library(viridis)
 library(gganimate)
 library(animation)
 library(gifski)
+library(janitor)
 source('./source_crowd_data.r')
 
 options(
@@ -11,12 +12,13 @@ options(
   gganimate.fps=10
 )
 
-animate <- F
-rebuild_dataframe <- F
+animate <- T
+rebuild_dataframe <- T
 yesterday <- Sys.Date()-1
 
 if (rebuild_dataframe) {
   dc <- build_crowd_data()
+  dc <- dc$dc_i
 }
 
 data_total <- dc %>% group_by(Date) %>% summarize(Total = sum(Total)) %>%
@@ -55,7 +57,7 @@ if (!animate) {
 }
 
 p <- ggplot(data = data, aes(x=DaysSince0, y=Total, fill = StateUt, size = Total^(0.3) ))  +
-  geom_point(shape = 21, color = 'lightgrey') + 
+  geom_point(shape = 21, color = 'white') + 
   geom_line(size = 0.5, alpha=0.6)  +
   geom_label(
     aes(x=x_label, y = yend, label = label, fill=StateUt),
@@ -88,11 +90,11 @@ if (animate) {
     title = 'Date {frame_along}', fontface = "bold"
   )
   p <- p + 
-    transition_time(date) + ease_aes('cubic-in-out') + 
-    transition_reveal(date)
+    transition_time(Date) + ease_aes('cubic-in-out') + 
+    transition_reveal(Date)
   animate(
     p,
-    renderer=gifski_renderer( loop = F ), # render gif
+    renderer=gifski_renderer( loop = T ), # render gif
     # renderer=av_renderer(), # render video
     res=150,
     height = 720,

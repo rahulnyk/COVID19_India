@@ -8,7 +8,7 @@ library(kableExtra)
 # library(plotly)
 source('./source_crowd_data.r')
 source('./source_official_data.r')
-if (F) {
+if (T) {
   dc <- build_crowd_data()
   dc_i <- dc$dc_i
   

@@ -29,6 +29,9 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
   library(readr)
   library(janitor)
   library(kableExtra)
+  library(gganimate)
+  library(animation)
+  library(gifski)
   # library(plotly)
   source('./source_crowd_data.r')
   source('./source_official_data.r')
@@ -120,8 +123,64 @@ https://github.com/CSSEGISandData/COVID-19
 
 Last update at **`r Sys.time()`**
 
+### Statewise Progression of cases with time
 
-##  {.tabset .tabset-fade .tabset-pills}
+```{r include=F}
+  data_anim <- data_i_total %>% 
+    filter(Source == 'Crowd Source') %>%
+    mutate(Day = as.integer(strftime(Date, format = "%j")) ) %>%
+    group_by(StateUt) %>% 
+    mutate( DaysSince0 = Day - min(Day)  ) %>% 
+    mutate( MaxDays = max(DaysSince0) ) %>%
+    mutate( MaxCases = max(round(Total))) %>%
+    ungroup() %>%
+    mutate(label =  paste(Total, StateUt, sep=" | "))
+```
+
+```{r echo=FALSE, message=F, warning=F, fig.height = 4, fig.width = 6}
+  ani.options(end_pause = 30)
+  p <- ggplot(
+    data = data_anim, 
+    aes(x=reorder(StateUt, -MaxCases), y=DaysSince0, fill = StateUt, size = Total^(0.3), 
+        color = StateUt )
+    )  +
+  geom_line(alpha=0.3) +
+  geom_label(aes(label = as.character(Total) ), size=3, color='white', nudge_x = 0) +
+  theme_minimal() +
+  theme( 
+    legend.position = 'off', 
+    axis.text.x = element_text(angle = 45, hjust = 1, size=8),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    plot.title = element_text(hjust = 0,  face = "bold", size=10)
+    ) +
+  coord_cartesian(clip = 'off')  +
+  scale_color_viridis_d(option="inferno", end = 0.9) + 
+  scale_fill_viridis_d(option="inferno", end = 0.9) + 
+  ylab("Days since first case reported")  + 
+  scale_radius(
+    range = c(1, 12),
+    trans = "identity",
+    guide = "legend"
+  ) + labs( title = 'Date {frame_along}', fontface = "bold" ) +
+  transition_time(Date) + ease_aes('cubic-in-out') + 
+  transition_reveal(Date)
+
+  animate(
+    p,
+    renderer=gifski_renderer( loop = T ),
+    end_pause = 30
+  )
+  
+```
+
+
+Data: Crowd sourced
+
+Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnimation.R
+
+##  {.tabset .tabset-fade }
 
 ### Pan India
 
@@ -157,6 +216,8 @@ Last update at **`r Sys.time()`**
 
 ```
 
+Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaGrowthRate_v2.R
+
 #### Cumulative
 
 ```{r include = FALSE}
@@ -189,9 +250,11 @@ Last update at **`r Sys.time()`**
 
 ```
 
+Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaCumulativeCases_v2.R
+
 ### Statewise 
 
-#### Statewise growth as per crowd sourced data
+#### Statewise growth in cumulative number of cases. 
 
 ```{r include = F }
 
@@ -256,6 +319,11 @@ d_i_long_total$StateUt[d_i_long_total$StateUt == "Telengana"] <- "Telangana"
 
 ```
 
+Data: Crowd sourced
+
+Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseries_v3.R
+
+
 #### State wise split of cumulative number of cases as per last update.
 
 ```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE, fig.height = 6, fig.width = 8}
@@ -272,6 +340,8 @@ d_i_long_total$StateUt[d_i_long_total$StateUt == "Telengana"] <- "Telangana"
       axis.text.x = element_text(angle = 45, hjust = 1)
       ) + scale_fill_viridis_d(option = 'cividis', end = 0.9)
 ```
+
+Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaStateWise.R
 
 ### Agewise 
 
@@ -295,6 +365,8 @@ Data available for **`r nrow(dc_age_i)`** cases
     )
 
 ```
+
+Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaAgewise.R
 
 ### World
 
