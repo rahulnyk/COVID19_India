@@ -180,7 +180,7 @@ Data: Crowd sourced
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnimation.R
 
-##  {.tabset .tabset-fade }
+## Different cross sections of COVID19 data {.tabset .tabset-fade }
 
 ### Pan India
 
