@@ -143,8 +143,12 @@ animate <- T
 if (animate) {
   p <- ggplot(
     data = data_anim,
-    aes(x=reorder(StateUt, -MaxCases), y=DaysSince0, fill = StateUt, size = Total^(0.3),
-        color = StateUt )
+    aes(
+      x=reorder(StateUt, -MaxCases), 
+      y=DaysSince0, 
+      fill = Total^(0.3), 
+      size = Total^(0.3),
+      color = Total^(0.3) )
     )  +
   geom_line(alpha=0.3) +
   geom_label(aes(label = as.character(Total) ), size=3, color='white', nudge_x = 0) +
@@ -158,8 +162,8 @@ if (animate) {
     plot.title = element_text(hjust = 0,  face = "bold", size=10)
     ) +
   coord_cartesian(clip = 'off')  +
-  scale_color_viridis_d(option="inferno", end = 0.9) +
-  scale_fill_viridis_d(option="inferno", end = 0.9) +
+  scale_color_viridis_c(option="inferno", direction = -1) +
+  scale_fill_viridis_c(option="inferno", direction = -1) +
   ylab("Days since first case reported")  +
   scale_radius(
     range = c(1, 12),
@@ -184,7 +188,8 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnima
 
 ## Different cross sections of COVID19 data {.tabset .tabset-fade }
 
-### Pan India
+
+### **Pan India**
 
 ####  Daily growth rate 
 The solid lines are smoothed conditional means, which indicated the overall trend. 
@@ -287,24 +292,28 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/DailyNewCasesIndia.R
       aes(x = Date, y = Cumulative, fill=Status)
     ) +      
     theme_minimal() +
-    geom_area(stat = 'identity') + facet_wrap(~Source, ncol = 1) + 
+    geom_bar(stat = 'identity') + facet_wrap(~Source, ncol = 1) + 
     geom_text(
       data = data_label, 
       aes(label = Cumulative), show.legend = F,
-      angle = 0, vjust = 0.5, hjust = 1, nudge_y = 0, nudge_x = -0.5) + 
+      angle = 90, vjust = 0.5, hjust = 0, nudge_y = 50, nudge_x = 0) + 
     geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
     annotate(
     "text", x = dmy('25-03-2020'), y = 2000, 
     size = 5, label = "Lockdown", hjust = 0, fontface =1 ) +
-    theme(legend.position = c(0.2, 0.8)) +
-    scale_fill_viridis_d(begin = 0.1, end = 1) + scale_color_viridis_d(begin = 0.1, end=1)
+    theme(
+      legend.position = c(0.2, 0.8),
+      plot.margin = margin(0, 0, 0, 0)
+      ) + coord_cartesian(clip = 'off') +
+    scale_fill_viridis_d(begin = 0.1, end = 1) + 
+    scale_color_viridis_d(begin = 0.1, end=1) 
   
 
 ```
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaCumulativeCases_v2.R
 
-### Statewise 
+### **Statewise** 
 
 #### Statewise growth in cumulative number of cases. 
 
@@ -402,7 +411,7 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseries_v3.R
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaStateWise.R
 
-### Agewise 
+### **Agewise**
 
 #### Agewise split of cases in India
 
@@ -432,7 +441,7 @@ Data available for **`r nrow(dc_age_i)`** cases
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaAgewise.R
 
-### World
+### **World**
 
 #### Global Growth rate
 

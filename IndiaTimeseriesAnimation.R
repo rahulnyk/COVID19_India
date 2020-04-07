@@ -66,10 +66,15 @@ data_anim <- data_i_total %>%
 # data_anim2 <- left_join(data_anim, labels, by = c("StateUt") )
 
 p <- ggplot(
-    data = data_anim, 
-    aes(x=reorder(StateUt, -MaxCases), y=DaysSince0, fill = StateUt, size = Total^(0.3), 
-        color = StateUt )
-    )  +
+      data = data_anim, 
+      aes(
+          x=reorder(StateUt, -MaxCases), 
+          y=DaysSince0, 
+          fill = Total^(0.3), 
+          size = Total^(0.3), 
+          color = Total^(0.3) 
+          )
+      )  +
   geom_line(alpha=0.3) +
   geom_label(aes(label = as.character(Total) ), size=3, color='white', nudge_x = 0) +
   theme_minimal() +
@@ -82,8 +87,8 @@ p <- ggplot(
     plot.title = element_text(hjust = 0.5,  face = "bold", size=12)
     ) +
   coord_cartesian(clip = 'off')  +
-  scale_color_viridis_d(option="inferno", end = 0.9) + 
-  scale_fill_viridis_d(option="inferno", end = 0.9) + 
+  scale_color_viridis_c(option="inferno", end = 1, direction = -1) + 
+  scale_fill_viridis_c(option="inferno", end = 1, direction = -1) + 
   ylab("Days since first case reported") # + 
   # scale_radius(
   #   range = c(1, 10),
