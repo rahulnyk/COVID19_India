@@ -31,7 +31,7 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
   library(gganimate)
   library(animation)
   library(gifski)
-  library(plotly)
+  # library(plotly)
   # library(plotly)
   source('./source_crowd_data.r')
   source('./source_official_data.r')
@@ -391,7 +391,7 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseries_v3.R
 #### State wise split of cumulative number of cases as per last update.
 
 ```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE, fig.height = 8, fig.width = 8}
- p <- ggplot(
+ ggplot(
       data = d_i_long_total, 
       aes(x = reorder( StateUt, Cumulative ), y = Cumulative, fill = Source)
       ) + 
@@ -403,10 +403,10 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseries_v3.R
       axis.title.x = element_blank(),
       axis.text.x = element_text(angle = 45, hjust = 1)
       ) + scale_fill_viridis_d(option = 'cividis', end = 0.9)
-  ggplotly(p) %>% layout(legend = list(
-      orientation = "h"
-    )
-  ) %>% config(displayModeBar = F)
+  # ggplotly(p) %>% layout(legend = list(
+  #     orientation = "h"
+  #   )
+  # ) %>% config(displayModeBar = F)
 ```
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaStateWise.R
@@ -419,7 +419,7 @@ Data available for **`r nrow(dc_age_i)`** cases
 
 ```{r echo=FALSE,  message=FALSE, warning=FALSE, fig.height = 3, fig.width = 8}
 
-  p <- ggplot(data = dc_age_i, aes(x = AgeBracket, fill=Status)) +
+  ggplot(data = dc_age_i, aes(x = AgeBracket, fill=Status)) +
     geom_histogram(stat = "bin", position = "stack", bins = 40, color = 'white') +
     scale_fill_viridis_d(option = 'magma', end = 0.9) + 
     theme_minimal() + 
@@ -432,10 +432,10 @@ Data available for **`r nrow(dc_age_i)`** cases
       legend.position = c(0.8, 0.8)
     )
 
-  ggplotly(p) %>% layout(legend = list(
-      orientation = "h"
-    )
-  ) %>% config(displayModeBar = F)
+  # ggplotly(p) %>% layout(legend = list(
+  #     orientation = "h"
+  #   )
+  # ) %>% config(displayModeBar = F)
 
 ```
 
@@ -458,7 +458,7 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaAgewise.R
     legend.title = element_blank(), 
     legend.position = c(0.2, 0.8)
   )
-  p <- ggplot(data = data_rate_w,  aes(x = Date, y = Rate1, color = Status, fill = Status)) + 
+  ggplot(data = data_rate_w,  aes(x = Date, y = Rate1, color = Status, fill = Status)) + 
     geom_smooth(aes(group = Status), alpha = 0.2, size = 0.6, linetype=1) + 
     geom_point(alpha = 0.2, size=2) + geom_line(alpha = 0.4) +
     labs(y = "Growth rate in Percentage") + # labs(title = "Groth rate by date") + 
@@ -467,10 +467,10 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaAgewise.R
     ylim(c(-10, 50)) +
     plot_theme 
   
-  ggplotly(p) %>% layout(legend = list(
-      orientation = "h"
-    )
-  ) %>% config(displayModeBar = F)
+  # ggplotly(p) %>% layout(legend = list(
+  #     orientation = "h"
+  #   )
+  # ) %>% config(displayModeBar = F)
 ```
 
 #### Global Cumulative cases
@@ -482,7 +482,8 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaAgewise.R
       ) + 
     geom_area(position = "stack", stat = "identity") +
     # scale_y_continuous(trans = 'log2') +
-    labs(y = "Number of cases (thousands)") + # labs(title = "Reported number of cases by date") + 
+    labs(y = "Number of cases (thousands)") + 
+    # labs(title = "Reported number of cases by date") + 
     scale_fill_viridis_d(option=pal, begin = 0, end = 0.9) + 
     scale_color_viridis_d(option=pal, begin = 0, end = 0.9) +
     plot_theme
