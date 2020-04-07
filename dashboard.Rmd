@@ -32,6 +32,7 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
   library(gganimate)
   library(animation)
   library(gifski)
+  library(plotly)
   # library(plotly)
   source('./source_crowd_data.r')
   source('./source_official_data.r')
@@ -107,7 +108,7 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5)
   data_today <- data_i_aggregated_long %>%
     filter(Date == max(Date)) %>%
     pivot_wider(values_from = Cumulative, names_from = Source) %>%
-    select(-c(Date)) 
+    select(-c(Date)) %>% filter(!(Status %in% c('NA', NA)))
   kable(data_today) %>% kable_styling(
     bootstrap_options = c("striped", "hover"), full_width = F, position = 'float_right')
   
@@ -140,15 +141,15 @@ Last update at **`r Sys.time()`**
 ```{r echo=FALSE, message=F, warning=F, fig.height = 4, fig.width = 6}
   ani.options(end_pause = 30)
   p <- ggplot(
-    data = data_anim, 
-    aes(x=reorder(StateUt, -MaxCases), y=DaysSince0, fill = StateUt, size = Total^(0.3), 
+    data = data_anim,
+    aes(x=reorder(StateUt, -MaxCases), y=DaysSince0, fill = StateUt, size = Total^(0.3),
         color = StateUt )
     )  +
   geom_line(alpha=0.3) +
   geom_label(aes(label = as.character(Total) ), size=3, color='white', nudge_x = 0) +
   theme_minimal() +
-  theme( 
-    legend.position = 'off', 
+  theme(
+    legend.position = 'off',
     axis.text.x = element_text(angle = 45, hjust = 1, size=8),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
@@ -156,15 +157,15 @@ Last update at **`r Sys.time()`**
     plot.title = element_text(hjust = 0,  face = "bold", size=10)
     ) +
   coord_cartesian(clip = 'off')  +
-  scale_color_viridis_d(option="inferno", end = 0.9) + 
-  scale_fill_viridis_d(option="inferno", end = 0.9) + 
-  ylab("Days since first case reported")  + 
+  scale_color_viridis_d(option="inferno", end = 0.9) +
+  scale_fill_viridis_d(option="inferno", end = 0.9) +
+  ylab("Days since first case reported")  +
   scale_radius(
     range = c(1, 12),
     trans = "identity",
     guide = "legend"
   ) + labs( title = 'Date {frame_along}', fontface = "bold" ) +
-  transition_time(Date) + ease_aes('cubic-in-out') + 
+  transition_time(Date) + ease_aes('cubic-in-out') +
   transition_reveal(Date)
 
   animate(
@@ -172,7 +173,7 @@ Last update at **`r Sys.time()`**
     renderer=gifski_renderer( loop = T ),
     end_pause = 30
   )
-  
+
 ```
 
 
@@ -198,7 +199,7 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnima
     mutate( DailyRate = round((Total - TotalPrev)*100/(DateCurPrev*TotalPrev) ) ) %>%
     ungroup()
 
-  ggplot(
+  p <- ggplot(
     data = data_i_rate,  
     aes(x = Date, y = DailyRate, group = Source, color = Source, fill=Source)
     ) + 
@@ -214,6 +215,10 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnima
   theme(legend.position = c(0.2, 0.8) ) +
   scale_fill_viridis_d(end = 0.6) + scale_color_viridis_d(end=0.6)
 
+  ggplotly(p) %>% layout(legend = list(
+      orientation = "h"
+    )
+  ) %>% config(displayModeBar = F)
 ```
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaGrowthRate_v2.R
@@ -223,16 +228,15 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaGrowthRate_v2.R
 ```{r include = FALSE}
   data_label <- data_i_aggregated_long %>% filter(Status == 'Total') %>% 
     filter( Date > Sys.Date()-5 )
-  data_split_status <- data_i_aggregated_long %>% filter(Status != 'Total') 
+  data_split_status <- data_i_aggregated_long %>% 
+    filter(!(Status %in% c('Total', 'NA', NA)))
 ```
 
 
 ```{r echo=FALSE, fig.cap="Total number of COVID19 cases in India by Date", message=FALSE, warning=FALSE}
-  
-   
 
   ggplot(
-      data = data_split_status,  
+      data = data_split_status,
       aes(x = Date, y = Cumulative, fill=Status)
     ) +      
     theme_minimal() +
@@ -247,6 +251,7 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaGrowthRate_v2.R
     size = 5, label = "Lockdown", hjust = 0, fontface =1 ) +
     theme(legend.position = c(0.2, 0.8)) +
     scale_fill_viridis_d(begin = 0.1, end = 1) + scale_color_viridis_d(begin = 0.1, end=1)
+  
 
 ```
 
@@ -274,7 +279,9 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaCumulativeCases
 
 d_i_long_total <- d_i_long %>% 
   filter(Status == 'Total') %>% 
+  group_by(Source) %>%
   filter(Date == max(Date)) %>%
+  ungroup() %>%
   filter(Cumulative > 5) %>%
   filter(!(StateUt == 'unassigned'))
 
@@ -315,7 +322,8 @@ d_i_long_total$StateUt[d_i_long_total$StateUt == "Telengana"] <- "Telangana"
       trans = "identity",
       guide = "legend"
     ) + 
-    coord_cartesian(clip = 'off') 
+    coord_cartesian(clip = 'off') + 
+    theme(legend.position='none')
 
 ```
 
@@ -326,8 +334,8 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseries_v3.R
 
 #### State wise split of cumulative number of cases as per last update.
 
-```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE, fig.height = 6, fig.width = 8}
-  ggplot(
+```{r echo=FALSE, fig.cap="Statewise Split", message=FALSE, warning=FALSE, fig.height = 8, fig.width = 8}
+ p <- ggplot(
       data = d_i_long_total, 
       aes(x = reorder( StateUt, Cumulative ), y = Cumulative, fill = Source)
       ) + 
@@ -339,6 +347,10 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseries_v3.R
       axis.title.x = element_blank(),
       axis.text.x = element_text(angle = 45, hjust = 1)
       ) + scale_fill_viridis_d(option = 'cividis', end = 0.9)
+  ggplotly(p) %>% layout(legend = list(
+      orientation = "h"
+    )
+  ) %>% config(displayModeBar = F)
 ```
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaStateWise.R
@@ -351,7 +363,7 @@ Data available for **`r nrow(dc_age_i)`** cases
 
 ```{r echo=FALSE,  message=FALSE, warning=FALSE, fig.height = 3, fig.width = 8}
 
-  ggplot(data = dc_age_i, aes(x = AgeBracket, fill=Status)) +
+  p <- ggplot(data = dc_age_i, aes(x = AgeBracket, fill=Status)) +
     geom_histogram(stat = "bin", position = "stack", bins = 40, color = 'white') +
     scale_fill_viridis_d(option = 'magma', end = 0.9) + 
     theme_minimal() + 
@@ -363,6 +375,11 @@ Data available for **`r nrow(dc_age_i)`** cases
       legend.title = element_blank(), 
       legend.position = c(0.8, 0.8)
     )
+
+  ggplotly(p) %>% layout(legend = list(
+      orientation = "h"
+    )
+  ) %>% config(displayModeBar = F)
 
 ```
 
@@ -385,7 +402,7 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaAgewise.R
     legend.title = element_blank(), 
     legend.position = c(0.2, 0.8)
   )
-  ggplot(data = data_rate_w,  aes(x = Date, y = Rate1, color = Status, fill = Status)) + 
+  p <- ggplot(data = data_rate_w,  aes(x = Date, y = Rate1, color = Status, fill = Status)) + 
     geom_smooth(aes(group = Status), alpha = 0.2, size = 0.6, linetype=1) + 
     geom_point(alpha = 0.2, size=2) + geom_line(alpha = 0.4) +
     labs(y = "Growth rate in Percentage") + # labs(title = "Groth rate by date") + 
@@ -393,7 +410,11 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaAgewise.R
     scale_color_viridis_d(option=pal, end = 0.6) + 
     ylim(c(-10, 50)) +
     plot_theme 
-
+  
+  ggplotly(p) %>% layout(legend = list(
+      orientation = "h"
+    )
+  ) %>% config(displayModeBar = F)
 ```
 
 #### Global Cumulative cases
