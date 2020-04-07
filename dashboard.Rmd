@@ -16,7 +16,6 @@ knit: (function(input_file, encoding) {
 ---
 
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.width=8, fig.height=5) 
@@ -140,6 +139,8 @@ Last update at **`r Sys.time()`**
 
 ```{r echo=FALSE, message=F, warning=F, fig.height = 4, fig.width = 6}
   ani.options(end_pause = 30)
+animate <- T
+if (animate) {
   p <- ggplot(
     data = data_anim,
     aes(x=reorder(StateUt, -MaxCases), y=DaysSince0, fill = StateUt, size = Total^(0.3),
@@ -173,7 +174,7 @@ Last update at **`r Sys.time()`**
     renderer=gifski_renderer( loop = T ),
     end_pause = 30
   )
-
+}
 ```
 
 
@@ -186,6 +187,11 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnima
 ### Pan India
 
 ####  Daily growth rate 
+The solid lines are smoothed conditional means, which indicated the overall trend. 
+The dots and the soft lines represent actual data. 
+
+Growth rate is calculated as 
+(previous - current)/previous
 
 ```{r echo=FALSE, fig.cap="Daily Growth rate of COVID19 cases in India", message=FALSE, warning=FALSE}
 
@@ -199,7 +205,7 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnima
     mutate( DailyRate = round((Total - TotalPrev)*100/(DateCurPrev*TotalPrev) ) ) %>%
     ungroup()
 
-  p <- ggplot(
+  ggplot(
     data = data_i_rate,  
     aes(x = Date, y = DailyRate, group = Source, color = Source, fill=Source)
     ) + 
@@ -208,20 +214,61 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnima
   "text", x = dmy('25-03-2020'), y = 34, 
   size = 5, label = "Lockdown", hjust = 0, fontface = 1 ) +
   theme_minimal() +
-  geom_point(alpha = 0.3, size = 2) + geom_line(linetype = 1, alpha = 0.3) + 
-  geom_smooth(alpha = 0.05, size=0.6) +
+  geom_line(linetype = 1, alpha = 0.3, size = 1) + 
+  geom_point(alpha = 0.3, size = 3, stroke = 1, shape = 21, fill = 'white') +  
+  geom_smooth(alpha = 0.05, size=1, se = F) +
   labs(y = "Growth rate in Percentage")  + 
   ylim(c(-10, 50)) +
   theme(legend.position = c(0.2, 0.8) ) +
   scale_fill_viridis_d(end = 0.6) + scale_color_viridis_d(end=0.6)
-
-  ggplotly(p) %>% layout(legend = list(
-      orientation = "h"
-    )
-  ) %>% config(displayModeBar = F)
+# 
+#   ggplotly(p) %>% layout(legend = list(
+#       orientation = "h"
+#     )
+#   ) %>% config(displayModeBar = F)
 ```
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaGrowthRate_v2.R
+
+#### New cases per day
+
+```{r include=F}
+  data_i_new_cases <- d_i_wide  %>% select(StateUt, Date, Total, Source) %>% 
+    group_by(Date, Source) %>%
+    summarise(Total = sum(Total)) %>% group_by(Source) %>%
+    mutate( TotalPrev = lag(Total, default = 0, order_by = Date)) %>%
+    filter( Date > ymd('2020-03-03')	) %>%
+    mutate( NewCases = (Total - TotalPrev) ) %>%
+    ungroup()
+```
+
+
+```{r new_cases, echo=FALSE, message=FALSE, warning=FALSE, fig.height=3, fig.width=8}
+  ggplot(
+    data = data_i_new_cases,  
+    aes(x = Date, y = NewCases, group = Source, color = Source, fill=Source)
+    ) + 
+    geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
+    annotate(
+      "text", x = dmy('25-03-2020'), y = 250, 
+      size = 5, label = "Lockdown", hjust = 0, fontface = 1 ) +
+    theme_minimal() +
+    geom_line(linetype = 1, alpha = 0.8, size = 1) + 
+    geom_point(alpha = 0.8, size = 3, stroke = 1, shape = 21, fill = 'white') + 
+    # geom_smooth(alpha = 0.05, size=0.6, se = F) +
+    labs(y = "Number of new cases reported")  + 
+    # ylim(c(-10, 50)) +
+    theme(
+      legend.position = c(0.4, 0.6),
+      panel.grid.minor = element_blank()
+      ) +
+    scale_fill_viridis_d(end = 0.6) + scale_color_viridis_d(end=0.6)
+
+```
+
+Code: https://github.com/rahulnyk/COVID19_India/blob/master/DailyNewCasesIndia.R
+
+
 
 #### Cumulative
 
