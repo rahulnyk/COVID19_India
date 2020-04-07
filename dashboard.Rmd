@@ -138,47 +138,51 @@ Last update at **`r Sys.time()`**
 ```
 
 ```{r echo=FALSE, message=F, warning=F, fig.height = 4, fig.width = 6}
-  ani.options(end_pause = 30)
-animate <- T
-if (animate) {
-  p <- ggplot(
-    data = data_anim,
-    aes(
-      x=reorder(StateUt, -MaxCases), 
-      y=DaysSince0, 
-      fill = Total^(0.3), 
-      size = Total^(0.3),
-      color = Total^(0.3) )
-    )  +
-  geom_line(alpha=0.3) +
-  geom_label(aes(label = as.character(Total) ), size=3, color='white', nudge_x = 0) +
-  theme_minimal() +
-  theme(
-    legend.position = 'off',
-    axis.text.x = element_text(angle = 45, hjust = 1, size=8),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.title.x = element_blank(),
-    plot.title = element_text(hjust = 0,  face = "bold", size=10)
-    ) +
-  coord_cartesian(clip = 'off')  +
-  scale_color_viridis_c(option="inferno", direction = -1) +
-  scale_fill_viridis_c(option="inferno", direction = -1) +
-  ylab("Days since first case reported")  +
-  scale_radius(
-    range = c(1, 12),
-    trans = "identity",
-    guide = "legend"
-  ) + labs( title = 'Date {frame_along}', fontface = "bold" ) +
-  transition_time(Date) + ease_aes('cubic-in-out') +
-  transition_reveal(Date)
-
-  animate(
-    p,
-    renderer=gifski_renderer( loop = T ),
-    end_pause = 30
+  ani.options(end_pause = 30 )
+  options(
+    gganimate.nframes = 120, 
+    gganimate.fps=8
   )
-}
+  animate <- T
+  if (animate) {
+    p <- ggplot(
+      data = data_anim,
+      aes(
+        x=reorder(StateUt, -MaxCases), 
+        y=DaysSince0, 
+        fill = Total^(0.3), 
+        size = Total^(0.3),
+        color = Total^(0.3) )
+      )  +
+    geom_line(alpha=0.3) +
+    geom_label(aes(label = as.character(Total) ), size=3, color='white', nudge_x = 0) +
+    theme_minimal() +
+    theme(
+      legend.position = 'off',
+      axis.text.x = element_text(angle = 45, hjust = 1, size=8),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.title.x = element_blank(),
+      plot.title = element_text(hjust = 1, size=13)
+      ) +
+    coord_cartesian(clip = 'off')  +
+    scale_color_viridis_c(option="inferno", direction = -1) +
+    scale_fill_viridis_c(option="inferno", direction = -1) +
+    ylab("Days since first case reported")  +
+    scale_radius(
+      range = c(1, 12),
+      trans = "identity",
+      guide = "legend"
+    ) + labs( title = '{frame_along}', fontface = "bold" ) +
+    transition_time(Date) + ease_aes('cubic-in-out') +
+    transition_reveal(Date)
+  
+    animate(
+      p,
+      renderer=gifski_renderer( loop = T ),
+      end_pause = 30
+    )
+  }
 ```
 
 
@@ -195,8 +199,9 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnima
 The solid lines are smoothed conditional means, which indicated the overall trend. 
 The dots and the soft lines represent actual data. 
 
-Growth rate is calculated as 
-(previous - current)/previous
+Growth rate is calculated as:
+
+$$G_{current} = (Total_{previous}- Total_{current})/Total_{previous}$$
 
 ```{r echo=FALSE, fig.cap="Daily Growth rate of COVID19 cases in India", message=FALSE, warning=FALSE}
 
@@ -488,3 +493,16 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaAgewise.R
     scale_color_viridis_d(option=pal, begin = 0, end = 0.9) +
     plot_theme
 ```
+
+##
+
+---
+
+This Dashboard is **[Hosted on Github](https://github.com/rahulnyk/COVID19_India)**
+
+by [Rahul Nayak](https://www.linkedin.com/in/rahulnyk/)
+
+![](https://media-exp1.licdn.com/dms/image/C510BAQGXcesixi_kZA/company-logo_100_100/0?e=1594252800&v=beta&t=BplHG9oQxA1vuJfKGwffWcRH-ghA6phDyAwnRKMjk6w){width=40px}
+
+[SmartLoo Platform](https://www.linkedin.com/company/smart-loo)
+
