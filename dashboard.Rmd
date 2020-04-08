@@ -190,7 +190,7 @@ Data: Crowd sourced
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaTimeseriesAnimation.R
 
-## Different cross sections of COVID19 data {.tabset .tabset-fade }
+## Different cross sections of COVID19 data {.tabset .tabset-fade .tabset-pills}
 
 
 ### **Pan India**
@@ -318,6 +318,68 @@ Code: https://github.com/rahulnyk/COVID19_India/blob/master/DailyNewCasesIndia.R
 
 Code: https://github.com/rahulnyk/COVID19_India/blob/master/IndiaCumulativeCases_v2.R
 
+### **Weekly**
+
+Since the daily growth rate can be noisy, it may be helpful to see the weekly mean of daily growth rate to identify the tapering. 
+
+The Weekly mean of daily growth rate is calculated as follows: 
+
+$$ G_{WeeklyMean} = NewCases_{CurrentWeek}*100/(Sunday_{Previous} - Sunday_{Latest})*Cumulative_{PreviousWeek} $$
+
+
+```{r include=F}
+  
+  d <-  Sys.Date()
+  prev.days <- seq(d-6,d,by='day')
+  PrevSunday <- prev.days[weekdays(prev.days)=='Sunday']
+  
+  dweek <- d_i_wide  %>% select(StateUt, Date, Total, Source) %>% 
+    group_by(Date, Source) %>%
+    summarise(Total = sum(Total)) %>% group_by(Source) %>%
+    mutate( TotalPrev = lag(Total, default = 0, order_by = Date)) %>%
+    filter( Date > ymd('2020-03-01')	) %>%
+    mutate( NewCases = (Total - TotalPrev) ) %>%
+    ungroup() %>%
+    mutate(week = lubridate::isoweek(Date)) %>% 
+    group_by(week) %>%
+    mutate(WeekEnd = max(Date)) %>% 
+    ungroup() %>%
+    group_by(WeekEnd, Source) %>%
+    summarise(NewCases = sum(NewCases), TotalCases = max(Total)) %>% 
+    group_by(Source) %>%
+    mutate(TotalCasesPrev = lag(TotalCases, order_by = WeekEnd)) %>%
+    mutate(WeeklyMeanRate = NewCases*100/(7*TotalCasesPrev)) %>%
+    filter(!is.na(WeeklyMeanRate), WeekEnd <= PrevSunday) %>%
+    select(WeekEnd, Source, NewCases, WeeklyMeanRate) %>%
+    pivot_longer(-c(WeekEnd, Source), names_to = 'Metric', values_to = 'Value')
+
+  
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+  ggplot(
+    data = dweek,  
+    aes(x = WeekEnd, y = Value, group = Source, color = Source, fill=Source)
+    ) + facet_wrap(~Metric, ncol = 1, scales = "free_y") +
+    geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
+    theme_minimal() +
+    geom_line(aes(linetype = Metric), alpha = 0.8, size = 1) + 
+    geom_point(alpha = 0.8, size = 3, stroke = 1, shape = 21, fill = 'white') + 
+    labs(y = "Number of new cases reported")  + 
+    scale_fill_viridis_d(end = 0.6) + scale_color_viridis_d(end=0.6) + 
+    coord_cartesian(clip = F) + 
+    scale_x_date(breaks = as.Date( unique(dweek$WeekEnd) ), date_labels = "%A, %b %d") + 
+    theme(
+      axis.text.x = element_text(face = 'bold'),
+      panel.grid.minor = element_blank(),
+      axis.title.y = element_blank(),
+      strip.text.x = element_text(angle = 0, hjust = 0, size = 10, face = 2)
+    )
+
+```
+
+
 ### **Statewise** 
 
 #### Statewise growth in cumulative number of cases. 
@@ -362,8 +424,8 @@ d_i_long_total$StateUt[d_i_long_total$StateUt == "Telengana"] <- "Telangana"
     geom_point(shape = 21, color = 'white') + 
     geom_vline(xintercept = dmy('24-03-2020'), linetype = '11' ) + 
     annotate(
-    "text", x = dmy('25-03-2020'), y = 34, 
-    size = 4, label = "Lockdown", hjust = 0.5, vjust = -1, fontface =1, angle = 30  ) +
+    "text", x = dmy('25-03-2020'), y = 2, 
+    size = 4, label = "Lockdown", hjust = 0.5, vjust = -1, fontface =1  ) +
     theme_minimal() + 
     theme(
       legend.position = 'off',
