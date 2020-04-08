@@ -1,3 +1,9 @@
+## Latest repo
+We have forked this repo under Impactech. For latest version of this dashboard that repository instead of this one. 
+
+https://github.com/Impactech/COVID19_India
+
+
 ## R Markdown dashboard for COVID19 India Data. 
 This repo is use to host R dashboard which tracks COVID India data. The dashboard can be accessed throug the following link.
 
@@ -8,7 +14,7 @@ I am in the process of consolidating the dashboard so there may be some temporar
 **Contributions most welcome** 
 
 
-# State wise timeseries data of covid19 cases in India
+## State wise timeseries data of covid19 cases in India
 
 **NOTE: In an effort to consolidate the data, we have moved it to the new repo**
 
