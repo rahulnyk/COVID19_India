@@ -5,9 +5,9 @@ https://github.com/Impactech/COVID19_India
 
 
 ## R Markdown dashboard for COVID19 India Data. 
-This repo is use to host R dashboard which tracks COVID India data. The dashboard can be accessed throug the following link.
+This repo is use to host R dashboard which tracks COVID India data. The dashboard can be accessed through the following link.
 
-https://rahulnyk.github.io/COVID19_India/
+https://impactech.github.io/COVID19_India/
 
 I am in the process of consolidating the dashboard so there may be some temporary mess in the repo. Will clean it up as soon as possile :)
 
